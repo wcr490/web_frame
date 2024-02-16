@@ -9,6 +9,7 @@ use std::collections::HashMap;
 struct RouteNode {
     son: HashMap<String, RouteNode>,
     is_leaf: bool,
+    callback: Option<Box<dyn Fn()>>,
 }
 pub struct Route {
     root: RouteNode,
@@ -34,7 +35,6 @@ impl Route {
         let prefix_vec = prefix_to_vec(prefix.clone());
         let mut cur_ptr = &mut self.root;
         for element in prefix_vec.clone().into_iter() {
-            println!("{element}");
             cur_ptr = if cur_ptr.son.contains_key(&element) {
                 res.push(element.clone());
                 cur_ptr.son.entry(element.clone()).or_default()
@@ -49,7 +49,7 @@ impl Route {
     }
 }
 
-pub fn prefix_to_vec(prefix: String) -> Vec<String> {
+fn prefix_to_vec(prefix: String) -> Vec<String> {
     let mut temp = prefix.clone();
     let mut target = Vec::new();
     while let Some(index) = temp.find("/") {
