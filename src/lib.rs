@@ -22,6 +22,8 @@ impl Config {
         }
     }
     pub fn with_route(route: Route) -> Self {
+        let exec: HashMap<String, Exe> = HashMap::new();
+
         Config {
             route,
             exec: HashMap::new(),
@@ -31,7 +33,6 @@ impl Config {
     pub fn method(&self) -> HashMap<String, Method> {
         self.method.clone()
     }
-    pub fn branch(&self) {}
 }
 /*
  * macro_rules! route_handlers {
@@ -57,6 +58,6 @@ impl Config {
 macro_rules! conf_to_iter {
     () => {};
     ($config: expr) => {
-        ($config.exec.iter(), $config.method().into_iter())
+        ($config.method().into_iter(), $config.exec.iter())
     };
 }

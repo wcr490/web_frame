@@ -14,8 +14,8 @@ pub type Resp = Response<BoxBody<Bytes, hyper::Error>>;
 pub type Exe = Box<dyn Callback>;
 struct RouteNode {
     son: HashMap<String, RouteNode>,
-    callback: Exe,
-    is_leaf: bool,
+    exe: Exe,
+    can_exe: bool,
 }
 pub struct Route {
     addr_vec: Vec<String>,
@@ -28,9 +28,38 @@ impl Default for RouteNode {
     fn default() -> Self {
         RouteNode {
             son: HashMap::default(),
-            callback: Box::new(DefaultCallback),
-            is_leaf: false,
+            exe: Box::new(DefaultCallback),
+            can_exe: false,
         }
+    }
+}
+pub struct ExeIter<'a> {
+    stack: Vec<&'a RouteNode>,
+}
+impl<'a> IntoIterator for &'a Route {
+    type Item = &'a Exe;
+    type IntoIter = ExeIter<'a>;
+    fn into_iter(self) -> Self::IntoIter {
+        ExeIter {
+            stack: vec![&self.root],
+        }
+    }
+}
+impl<'a> Iterator for ExeIter<'a> {
+    type Item = &'a Exe;
+    fn next(&mut self) -> Option<Self::Item> {
+        while let Some(node) = self.stack.pop() {
+            if node.can_exe {
+                return Some(&node.exe);
+            }
+            let k: Vec<&String> = node.son.keys().collect();
+            for i in (0..k.len()).rev() {
+                if let Some(son) = node.son.get(k[i]) {
+                    self.stack.push(son);
+                }
+            }
+        }
+        None
     }
 }
 pub struct DefaultCallback;
@@ -57,7 +86,7 @@ impl Route {
         for element in prefix_vec.into_iter() {
             cur_ptr = cur_ptr.son.entry(element).or_insert(RouteNode::default());
         }
-        cur_ptr.is_leaf = true;
+        cur_ptr.can_exe = true;
     }
     pub fn search(&mut self, prefix: String) -> (bool, Vec<String>) {
         let mut res = Vec::new();
@@ -70,17 +99,17 @@ impl Route {
             } else {
                 return (false, res);
             };
-            if cur_ptr.is_leaf && element.eq(prefix_vec.last().unwrap()) {
+            if cur_ptr.can_exe && element.eq(prefix_vec.last().unwrap()) {
                 return (true, res);
             }
         }
         return (true, res);
     }
-
     pub fn addr_vec(&mut self) -> Vec<String> {
         self.addr_vec.clone()
     }
 }
+
 fn prefix_to_vec(prefix: String) -> Vec<String> {
     let mut temp = prefix.clone();
     let mut target = Vec::new();
