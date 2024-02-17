@@ -11,7 +11,7 @@ use std::io::Read;
 use std::net::SocketAddr;
 use tokio::net::TcpListener;
 
-pub async fn build(
+pub async fn run_server(
     addr: SocketAddr,
     config: Config,
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
@@ -21,7 +21,14 @@ pub async fn build(
         let io = TokioIo::new(stream);
         tokio::task::spawn(async move {
             if let Err(e) = http1::Builder::new()
-                .serve_connection(io, service_fn(home))
+                .serve_connection(
+                    io,
+                    service_fn(|req| async {
+                        Ok::<_, hyper::Error>(Response::new(full(
+                            fs::read_to_string("hello.html").unwrap(),
+                        )))
+                    }),
+                )
                 .await
             {
                 println!("Err: {}", e);
@@ -30,21 +37,7 @@ pub async fn build(
     }
 }
 
-async fn home(
-    req: Request<hyper::body::Incoming>,
-) -> Result<Response<BoxBody<Bytes, hyper::Error>>, hyper::Error> {
-    if let (method, path) = (req.method(), req.uri().path()) {}
-    Ok(Response::new(full(
-        fs::read_to_string("hello.html").unwrap(),
-    )))
-}
-
-fn full<T: Into<Bytes>>(chunk: T) -> BoxBody<Bytes, hyper::Error> {
-    Full::new(chunk.into())
-        .map_err(|never| match never {})
-        .boxed()
-}
-fn search_with_req(mut conf: Config, req: Request<hyper::body::Incoming>) -> Option<Exe> {
+fn req_to_exe(mut conf: Config, req: Request<hyper::body::Incoming>) -> Option<Exe> {
     let method = conf.method.get(req.uri().path());
     let exe = conf.exec.remove(req.uri().path());
     if !(method.is_none() || exe.is_none()) {
@@ -52,4 +45,9 @@ fn search_with_req(mut conf: Config, req: Request<hyper::body::Incoming>) -> Opt
     } else {
         None
     }
+}
+pub(crate) fn full<T: Into<Bytes>>(chunk: T) -> BoxBody<Bytes, hyper::Error> {
+    Full::new(chunk.into())
+        .map_err(|never| match never {})
+        .boxed()
 }

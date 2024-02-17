@@ -1,9 +1,16 @@
+use super::super::hyper_manager::server::full;
 use std::collections::HashMap;
+use std::fs;
+
+use http_body_util::combinators::BoxBody;
+use hyper::body::Bytes;
+use hyper::Response;
 /*
  * based on Trie
  * spend a bit more memory to gain a rapid find_method
  * */
 
+pub type Resp = Response<BoxBody<Bytes, hyper::Error>>;
 pub type Exe = Box<dyn Callback>;
 struct RouteNode {
     son: HashMap<String, RouteNode>,
@@ -15,7 +22,7 @@ pub struct Route {
     root: RouteNode,
 }
 pub trait Callback {
-    fn call(&self);
+    fn call(&self) -> Result<Resp, hyper::Error>;
 }
 impl Default for RouteNode {
     fn default() -> Self {
@@ -26,9 +33,13 @@ impl Default for RouteNode {
         }
     }
 }
-struct DefaultCallback;
+pub struct DefaultCallback;
 impl Callback for DefaultCallback {
-    fn call(&self) {}
+    fn call(&self) -> Result<Resp, hyper::Error> {
+        Ok::<_, hyper::Error>(Response::new(full(
+            fs::read_to_string("hello.html").unwrap(),
+        )))
+    }
 }
 
 impl Route {
