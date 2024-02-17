@@ -1,21 +1,20 @@
+use std::collections::HashMap;
 /*
  * based on Trie
  * spend a bit more memory to gain a rapid find_method
  * */
 
-use std::collections::HashMap;
-
+pub(crate) type Exe = Box<dyn Callback>;
 struct RouteNode {
     son: HashMap<String, RouteNode>,
-    callback: Box<dyn Callback>,
+    callback: Exe,
     is_leaf: bool,
 }
 pub struct Route {
     addr_vec: Vec<String>,
     root: RouteNode,
 }
-
-trait Callback {
+pub(crate) trait Callback {
     fn call(&self);
 }
 impl Default for RouteNode {
