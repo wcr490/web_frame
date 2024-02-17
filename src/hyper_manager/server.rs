@@ -7,6 +7,7 @@ use hyper::service::service_fn;
 use hyper::{Method, Request, Response, StatusCode};
 use hyper_util::rt::TokioIo;
 use std::fs;
+use std::io::Read;
 use std::net::SocketAddr;
 use tokio::net::TcpListener;
 
@@ -32,7 +33,7 @@ pub async fn build(
 async fn home(
     req: Request<hyper::body::Incoming>,
 ) -> Result<Response<BoxBody<Bytes, hyper::Error>>, hyper::Error> {
-    let mut resp = Response::new(full("ok"));
+    let mut resp = Response::new(full(fs::read_to_string("hello.html").unwrap()));
     Ok(resp)
 }
 

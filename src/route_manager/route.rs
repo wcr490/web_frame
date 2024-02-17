@@ -5,24 +5,43 @@
 
 use std::collections::HashMap;
 
-#[derive(Default)]
 struct RouteNode {
     son: HashMap<String, RouteNode>,
+    callback: Box<dyn Callback>,
     is_leaf: bool,
-    callback: Option<Box<dyn Fn()>>,
 }
 pub struct Route {
+    addr_vec: Vec<String>,
     root: RouteNode,
+}
+
+trait Callback {
+    fn call(&self);
+}
+impl Default for RouteNode {
+    fn default() -> Self {
+        RouteNode {
+            son: HashMap::default(),
+            callback: Box::new(DefaultCallback),
+            is_leaf: false,
+        }
+    }
+}
+struct DefaultCallback;
+impl Callback for DefaultCallback {
+    fn call(&self) {}
 }
 
 impl Route {
     pub fn new() -> Self {
         Route {
+            addr_vec: Vec::new(),
             root: RouteNode::default(),
         }
     }
 
     pub fn insert(&mut self, prefix: String) {
+        self.addr_vec.push(prefix.clone());
         let prefix_vec = prefix_to_vec(prefix);
         let mut cur_ptr = &mut self.root;
         for element in prefix_vec.into_iter() {
@@ -47,8 +66,11 @@ impl Route {
         }
         return (true, res);
     }
-}
 
+    pub fn addr_vec(&mut self) -> Vec<String> {
+        self.addr_vec.clone()
+    }
+}
 fn prefix_to_vec(prefix: String) -> Vec<String> {
     let mut temp = prefix.clone();
     let mut target = Vec::new();
@@ -62,4 +84,19 @@ fn prefix_to_vec(prefix: String) -> Vec<String> {
     }
     target.push(temp);
     target
+}
+#[cfg(test)]
+mod test {
+    use super::*;
+    #[test]
+    fn a() {
+        let mut route = Route::new();
+        route.insert("112/22/888/aaa".to_string());
+        route.insert("112/22/8".to_string());
+        route.insert("112/1".to_string());
+        let vec = route.addr_vec();
+        assert_eq!(vec[1], "112/22/888/aaa");
+        assert_eq!(vec[0], "112/22/8");
+        assert_eq!(vec[2], "112/1");
+    }
 }

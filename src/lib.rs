@@ -15,3 +15,9 @@ impl Config {
         }
     }
 }
+
+macro_rules! route_exec {
+    ($method: expr, ($config: expr),*) => {{
+        ($method, $config) => Ok($config)
+    }};
+}
