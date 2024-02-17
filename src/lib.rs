@@ -1,7 +1,7 @@
 pub mod hyper_manager;
 pub mod route_manager;
 
-use hyper::Method;
+use hyper::{header::Iter, Method};
 use std::collections::HashMap;
 
 use hyper_manager::server::*;
@@ -9,8 +9,8 @@ use route_manager::route::*;
 
 pub struct Config {
     route: Route,
-    exec: HashMap<String, Exe>,
-    method: Method,
+    pub exec: HashMap<String, Exe>,
+    method: HashMap<String, Method>,
 }
 
 impl Config {
@@ -18,27 +18,45 @@ impl Config {
         Config {
             route: Route::new(),
             exec: HashMap::new(),
-            method: Method::POST,
+            method: HashMap::new(),
         }
     }
-}
-
-macro_rules! route_exec {
-    () => {};
-    ($config: ident: Config, $($rest:tt)*) => {
-        let mut map = $config.exec;
-        let mut iter = map.iter();
-        let key;
-        let val;
-        if let Some(k,v) = iter.next() {
-            let key = k;
-            let val = v;
+    pub fn with_route(route: Route) -> Self {
+        Config {
+            route,
+            exec: HashMap::new(),
+            method: HashMap::new(),
         }
-        {
-            ($config.method, key) => {
-                Ok(v)
+    }
+    pub fn method(&self) -> HashMap<String, Method> {
+        self.method.clone()
+    }
+    pub fn branch(&self) {}
+}
+/*
+ * macro_rules! route_handlers {
+    ($method:expr, $handlers:expr) => {
+        match ($method, req.uri().path()) {
+            $(
+                (method, path) if method == &$method && $handlers.contains_key(path) => {
+                    let handler = $handlers.get(path).unwrap();
+                    handler()
+                },
+            )*
+            _ => {
+                let mut not_found = Response::new(empty());
+                *not_found.status_mut() = StatusCode::NOT_FOUND;
+                Ok(not_found)
             }
         }
+    };
+}
+*/
 
-    }
+#[macro_export]
+macro_rules! conf_to_iter {
+    () => {};
+    ($config: expr) => {
+        ($config.exec.iter(), $config.method().into_iter())
+    };
 }

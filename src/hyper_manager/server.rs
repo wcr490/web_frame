@@ -33,12 +33,23 @@ pub async fn build(
 async fn home(
     req: Request<hyper::body::Incoming>,
 ) -> Result<Response<BoxBody<Bytes, hyper::Error>>, hyper::Error> {
-    let mut resp = Response::new(full(fs::read_to_string("hello.html").unwrap()));
-    Ok(resp)
+    if let (method, path) = (req.method(), req.uri().path()) {}
+    Ok(Response::new(full(
+        fs::read_to_string("hello.html").unwrap(),
+    )))
 }
 
 fn full<T: Into<Bytes>>(chunk: T) -> BoxBody<Bytes, hyper::Error> {
     Full::new(chunk.into())
         .map_err(|never| match never {})
         .boxed()
+}
+fn search_with_req(mut conf: Config, req: Request<hyper::body::Incoming>) -> Option<Exe> {
+    let method = conf.method.get(req.uri().path());
+    let exe = conf.exec.remove(req.uri().path());
+    if !(method.is_none() || exe.is_none()) {
+        exe
+    } else {
+        None
+    }
 }

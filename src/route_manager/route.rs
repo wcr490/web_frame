@@ -4,7 +4,7 @@ use std::collections::HashMap;
  * spend a bit more memory to gain a rapid find_method
  * */
 
-pub(crate) type Exe = Box<dyn Callback>;
+pub type Exe = Box<dyn Callback>;
 struct RouteNode {
     son: HashMap<String, RouteNode>,
     callback: Exe,
@@ -14,7 +14,7 @@ pub struct Route {
     addr_vec: Vec<String>,
     root: RouteNode,
 }
-pub(crate) trait Callback {
+pub trait Callback {
     fn call(&self);
 }
 impl Default for RouteNode {
