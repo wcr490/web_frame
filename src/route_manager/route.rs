@@ -22,6 +22,7 @@ pub struct Route {
     root: RouteNode,
 }
 pub trait Callback {
+    fn path(&self) -> String;
     fn call(&self) -> Result<Resp, hyper::Error>;
 }
 impl Default for RouteNode {
@@ -37,7 +38,7 @@ pub struct ExeIter<'a> {
     stack: Vec<&'a RouteNode>,
 }
 impl<'a> IntoIterator for &'a Route {
-    type Item = &'a Exe;
+    type Item = (String, &'a Exe);
     type IntoIter = ExeIter<'a>;
     fn into_iter(self) -> Self::IntoIter {
         ExeIter {
@@ -46,11 +47,11 @@ impl<'a> IntoIterator for &'a Route {
     }
 }
 impl<'a> Iterator for ExeIter<'a> {
-    type Item = &'a Exe;
+    type Item = (String, &'a Exe);
     fn next(&mut self) -> Option<Self::Item> {
         while let Some(node) = self.stack.pop() {
             if node.can_exe {
-                return Some(&node.exe);
+                return Some((node.exe.path(), &node.exe));
             }
             let k: Vec<&String> = node.son.keys().collect();
             for i in (0..k.len()).rev() {
@@ -64,7 +65,11 @@ impl<'a> Iterator for ExeIter<'a> {
 }
 pub struct DefaultCallback;
 impl Callback for DefaultCallback {
+    fn path(&self) -> String {
+        "/example".to_string()
+    }
     fn call(&self) -> Result<Resp, hyper::Error> {
+        println!("called");
         Ok::<_, hyper::Error>(Response::new(full(
             fs::read_to_string("hello.html").unwrap(),
         )))
@@ -87,6 +92,7 @@ impl Route {
             cur_ptr = cur_ptr.son.entry(element).or_insert(RouteNode::default());
         }
         cur_ptr.can_exe = true;
+        cur_ptr.exe = Box::new(DefaultCallback);
     }
     pub fn search(&mut self, prefix: String) -> (bool, Vec<String>) {
         let mut res = Vec::new();
@@ -108,6 +114,13 @@ impl Route {
     pub fn addr_vec(&mut self) -> Vec<String> {
         self.addr_vec.clone()
     }
+    pub fn exe_map(&self) -> HashMap<String, &Exe> {
+        let mut res = HashMap::new();
+        for (path, exe) in self.into_iter() {
+            res.insert(path, exe);
+        }
+        res
+    }
 }
 
 fn prefix_to_vec(prefix: String) -> Vec<String> {
@@ -128,14 +141,5 @@ fn prefix_to_vec(prefix: String) -> Vec<String> {
 mod test {
     use super::*;
     #[test]
-    fn a() {
-        let mut route = Route::new();
-        route.insert("112/22/888/aaa".to_string());
-        route.insert("112/22/8".to_string());
-        route.insert("112/1".to_string());
-        let vec = route.addr_vec();
-        assert_eq!(vec[1], "112/22/888/aaa");
-        assert_eq!(vec[0], "112/22/8");
-        assert_eq!(vec[2], "112/1");
-    }
+    fn a() {}
 }

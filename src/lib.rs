@@ -22,7 +22,7 @@ impl Config {
         }
     }
     pub fn with_route(route: Route) -> Self {
-        let exec: HashMap<String, Exe> = HashMap::new();
+        let exec = route.exe_map();
 
         Config {
             route,
@@ -34,30 +34,25 @@ impl Config {
         self.method.clone()
     }
 }
-/*
- * macro_rules! route_handlers {
-    ($method:expr, $handlers:expr) => {
-        match ($method, req.uri().path()) {
-            $(
-                (method, path) if method == &$method && $handlers.contains_key(path) => {
-                    let handler = $handlers.get(path).unwrap();
-                    handler()
-                },
-            )*
-            _ => {
-                let mut not_found = Response::new(empty());
-                *not_found.status_mut() = StatusCode::NOT_FOUND;
-                Ok(not_found)
-            }
-        }
-    };
-}
-*/
-
 #[macro_export]
 macro_rules! conf_to_iter {
     () => {};
     ($config: expr) => {
         ($config.method().into_iter(), $config.exec.iter())
+    };
+}
+#[macro_export]
+macro_rules! exe_generate {
+    () => {};
+    ($name: ident, $path: expr, $body: block) => {
+        struct $name;
+        impl Callback for $name {
+            fn call(&self) -> Result<Resp, hyper::Error> {
+                $body
+            }
+            fn path(&self) -> String {
+                $path
+            }
+        }
     };
 }

@@ -7,13 +7,12 @@ use hyper::service::service_fn;
 use hyper::{Method, Request, Response, StatusCode};
 use hyper_util::rt::TokioIo;
 use std::fs;
-use std::io::Read;
 use std::net::SocketAddr;
 use tokio::net::TcpListener;
 
 pub async fn run_server(
     addr: SocketAddr,
-    config: Config,
+    conf: Config,
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let listener = TcpListener::bind(addr).await?;
     loop {
@@ -54,7 +53,7 @@ fn path_contains(conf: &mut Config, req: &Request<hyper::body::Incoming>) -> boo
         false
     }
 }
-pub(crate) fn full<T: Into<Bytes>>(chunk: T) -> BoxBody<Bytes, hyper::Error> {
+pub fn full<T: Into<Bytes>>(chunk: T) -> BoxBody<Bytes, hyper::Error> {
     Full::new(chunk.into())
         .map_err(|never| match never {})
         .boxed()
