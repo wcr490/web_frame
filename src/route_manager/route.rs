@@ -34,35 +34,7 @@ impl Default for RouteNode {
         }
     }
 }
-pub struct ExeIter<'a> {
-    stack: Vec<&'a RouteNode>,
-}
-impl<'a> IntoIterator for &'a Route {
-    type Item = (String, &'a Exe);
-    type IntoIter = ExeIter<'a>;
-    fn into_iter(self) -> Self::IntoIter {
-        ExeIter {
-            stack: vec![&self.root],
-        }
-    }
-}
-impl<'a> Iterator for ExeIter<'a> {
-    type Item = (String, &'a Exe);
-    fn next(&mut self) -> Option<Self::Item> {
-        while let Some(node) = self.stack.pop() {
-            if node.can_exe {
-                return Some((node.exe.path(), &node.exe));
-            }
-            let k: Vec<&String> = node.son.keys().collect();
-            for i in (0..k.len()).rev() {
-                if let Some(son) = node.son.get(k[i]) {
-                    self.stack.push(son);
-                }
-            }
-        }
-        None
-    }
-}
+
 pub struct DefaultCallback;
 impl Callback for DefaultCallback {
     fn path(&self) -> String {
@@ -122,6 +94,35 @@ impl Route {
         res
     }
 }
+pub struct ExeIter<'a> {
+    stack: Vec<&'a RouteNode>,
+}
+impl<'a> IntoIterator for &'a Route {
+    type Item = (String, &'a Exe);
+    type IntoIter = ExeIter<'a>;
+    fn into_iter(self) -> Self::IntoIter {
+        ExeIter {
+            stack: vec![&self.root],
+        }
+    }
+}
+impl<'a> Iterator for ExeIter<'a> {
+    type Item = (String, &'a Exe);
+    fn next(&mut self) -> Option<Self::Item> {
+        while let Some(node) = self.stack.pop() {
+            if node.can_exe {
+                return Some((node.exe.path(), &node.exe));
+            }
+            let k: Vec<&String> = node.son.keys().collect();
+            for i in (0..k.len()).rev() {
+                if let Some(son) = node.son.get(k[i]) {
+                    self.stack.push(son);
+                }
+            }
+        }
+        None
+    }
+}
 
 fn prefix_to_vec(prefix: String) -> Vec<String> {
     let mut temp = prefix.clone();
@@ -140,6 +141,24 @@ fn prefix_to_vec(prefix: String) -> Vec<String> {
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::*;
     #[test]
-    fn a() {}
+    fn a() {
+        let mut r = Route::new();
+        r.insert("/example".to_string());
+        // if let Some((k, v)) = r.into_iter().find(|(k, _)| k.eq("/example")) {
+        //     v.call();
+        // }
+        let mut route = Route::new();
+        let mut conf = Config::with_route(route);
+        for ele in conf.exe().iter() {
+            ele.1.call();
+        }
+        exe_generate!(conf, ExampleThree, "exam".to_string(), {
+            println!("three");
+            Ok::<_, hyper::Error>(Response::new(full(
+                fs::read_to_string("hello.html").unwrap(),
+            )))
+        });
+    }
 }

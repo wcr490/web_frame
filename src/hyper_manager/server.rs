@@ -1,4 +1,4 @@
-use super::*;
+use super::super::*;
 
 use http_body_util::{combinators::BoxBody, BodyExt, Full};
 use hyper::body::{Bytes, Frame};
@@ -8,6 +8,7 @@ use hyper::{Method, Request, Response, StatusCode};
 use hyper_util::rt::TokioIo;
 use std::fs;
 use std::net::SocketAddr;
+use std::ops::Index;
 use tokio::net::TcpListener;
 
 pub async fn run_server(
@@ -20,14 +21,7 @@ pub async fn run_server(
         let io = TokioIo::new(stream);
         tokio::task::spawn(async move {
             if let Err(e) = http1::Builder::new()
-                .serve_connection(
-                    io,
-                    service_fn(|req| async {
-                        Ok::<_, hyper::Error>(Response::new(full(
-                            fs::read_to_string("hello.html").unwrap(),
-                        )))
-                    }),
-                )
+                .serve_connection(io, service_fn(|req| async { ExampleTwo.call() }))
                 .await
             {
                 println!("Err: {}", e);
