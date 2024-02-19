@@ -21,6 +21,7 @@ pub struct Route {
     addr_vec: Vec<String>,
     root: RouteNode,
 }
+
 pub trait Callback {
     fn path(&self) -> String;
     fn call(&self) -> Result<Resp, hyper::Error>;
@@ -137,28 +138,4 @@ fn prefix_to_vec(prefix: String) -> Vec<String> {
     }
     target.push(temp);
     target
-}
-#[cfg(test)]
-mod test {
-    use super::*;
-    use crate::*;
-    #[test]
-    fn a() {
-        let mut r = Route::new();
-        r.insert("/example".to_string());
-        // if let Some((k, v)) = r.into_iter().find(|(k, _)| k.eq("/example")) {
-        //     v.call();
-        // }
-        let mut route = Route::new();
-        let mut conf = Config::with_route(route);
-        for ele in conf.exe().iter() {
-            ele.1.call();
-        }
-        exe_generate!(conf, ExampleThree, "exam".to_string(), {
-            println!("three");
-            Ok::<_, hyper::Error>(Response::new(full(
-                fs::read_to_string("hello.html").unwrap(),
-            )))
-        });
-    }
 }

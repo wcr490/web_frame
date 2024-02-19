@@ -6,22 +6,39 @@ use hyper::server::conn::http1;
 use hyper::service::service_fn;
 use hyper::{Method, Request, Response, StatusCode};
 use hyper_util::rt::TokioIo;
+use std::borrow::Borrow;
 use std::fs;
 use std::net::SocketAddr;
-use std::ops::Index;
+use std::ops::{Deref, Index};
 use tokio::net::TcpListener;
+
+use futures::lock::Mutex;
+use std::sync::Arc;
 
 pub async fn run_server(
     addr: SocketAddr,
-    conf: Config,
+    conf: Arc<Mutex<Config>>,
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    let listener = TcpListener::bind(addr).await?;
+    let listener = tokio::net::TcpListener::bind(addr).await?;
     loop {
+        let conf_clone = Arc::clone(&conf);
         let (stream, _) = listener.accept().await?;
         let io = TokioIo::new(stream);
         tokio::task::spawn(async move {
             if let Err(e) = http1::Builder::new()
-                .serve_connection(io, service_fn(|req| async { ExampleTwo.call() }))
+                .serve_connection(
+                    io,
+                    service_fn(move |req| {
+                        let conf_clone = Arc::clone(&conf_clone);
+                        async move {
+                            let guard = conf_clone.lock().await;
+                            let config = (*guard).clone();
+                            let exe = req_to_exe(&config, req).await;
+                            let fut = async move { exe.unwrap().0.call() };
+                            fut.await
+                        }
+                    }),
+                )
                 .await
             {
                 println!("Err: {}", e);
@@ -29,22 +46,12 @@ pub async fn run_server(
         });
     }
 }
-
-fn req_to_exe(mut conf: Config, req: Request<hyper::body::Incoming>) -> Option<Exe> {
-    let path = req.uri().path();
-    if path_contains(&mut conf, &req) {
-        conf.exec.remove(path)
+async fn req_to_exe(conf: &Config, req: Request<hyper::body::Incoming>) -> Option<&Cb> {
+    let path = req.uri().path().to_string();
+    if conf.exec.contains_key(&path) && conf.method.contains_key(&path) {
+        conf.exec.get(&path).clone()
     } else {
         None
-    }
-}
-fn path_contains(conf: &mut Config, req: &Request<hyper::body::Incoming>) -> bool {
-    let method = conf.method.get(req.uri().path());
-    let exe = conf.exec.remove(req.uri().path());
-    if !(method.is_none() || exe.is_none()) {
-        true
-    } else {
-        false
     }
 }
 pub fn full<T: Into<Bytes>>(chunk: T) -> BoxBody<Bytes, hyper::Error> {
