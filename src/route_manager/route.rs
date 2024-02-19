@@ -57,7 +57,7 @@ impl Route {
         }
     }
 
-    pub fn insert(&mut self, prefix: String) {
+    pub fn insert_path(&mut self, prefix: String) {
         self.addr_vec.push(prefix.clone());
         let prefix_vec = prefix_to_vec(prefix);
         let mut cur_ptr = &mut self.root;
@@ -66,6 +66,18 @@ impl Route {
         }
         cur_ptr.can_exe = true;
         cur_ptr.exe = Box::new(DefaultCallback);
+    }
+    pub fn insert_exe(&mut self, exe: Exe, prefix: String) -> bool {
+        if self.addr_vec().contains(&prefix) {
+            let vec = prefix_to_vec(prefix);
+            let mut cur_ptr = &mut self.root;
+            for ele in vec {
+                cur_ptr = cur_ptr.son.entry(ele).or_default();
+            }
+            cur_ptr.exe = exe;
+            return true;
+        }
+        return false;
     }
     pub fn search(&mut self, prefix: String) -> (bool, Vec<String>) {
         let mut res = Vec::new();
