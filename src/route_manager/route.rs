@@ -84,7 +84,7 @@ impl Route {
     }
     ///insert a path into the route
     ///
-    /// # Arguement
+    /// # Parameter
     /// * `path`
     ///
     // Attention: after registering the path, the related exe should be registered
@@ -101,7 +101,7 @@ impl Route {
     }
     /// insert exe into the concrete path in the route
     ///
-    /// # Arguement
+    /// # Parameter
     /// * `exe`
     /// * `path`
     ///
@@ -122,7 +122,7 @@ impl Route {
     }
     /// search in the route
     ///
-    /// # Arguement
+    /// # Parameter
     /// * `path`
     ///
     /// # Return
@@ -158,7 +158,7 @@ impl Route {
     }
     /// get a map contains the path and Exe
     ///
-    /// # Arguement
+    /// # Parameter
     ///
     /// # Return
     /// * a map
@@ -218,7 +218,7 @@ impl<'a> Iterator for ExeIter<'a> {
 
 /// deal with the raw path
 ///
-/// # Arguement
+/// # Parameter
 /// * path
 ///
 /// # Return

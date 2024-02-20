@@ -15,14 +15,15 @@ use tokio::net::TcpListener;
 use futures::lock::Mutex;
 use std::sync::Arc;
 
+/// main function to boot the server provided by Hyper
+// please put your attention on the the closure in service_fn()
 pub async fn run_server(
     addr: SocketAddr,
     conf: Config,
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let listener = tokio::net::TcpListener::bind(addr).await?;
-
+    // wrap the conf by Arc and Mutex to guarantee thread safety
     let conf = Arc::new(Mutex::new(conf));
-
     loop {
         let conf_clone = Arc::clone(&conf);
         let (stream, _) = listener.accept().await?;
@@ -53,7 +54,15 @@ pub async fn run_server(
         });
     }
 }
-//TODO: complement the method judgment
+// TODO: complement the method judgment
+/// convert request into Cb which includes exe
+///
+/// # Parameter
+/// * `conf`
+/// * `req` - collection contains information
+///
+/// # Return
+/// * Option<&Cb>
 async fn req_to_exe(conf: &Config, req: Request<hyper::body::Incoming>) -> Option<&Cb> {
     let path = req.uri().path().to_string();
     println!("current page: {}", path);
@@ -63,6 +72,7 @@ async fn req_to_exe(conf: &Config, req: Request<hyper::body::Incoming>) -> Optio
         None
     }
 }
+/// convert String into BoxBody which can be the response
 pub fn full<T: Into<Bytes>>(chunk: T) -> BoxBody<Bytes, hyper::Error> {
     Full::new(chunk.into())
         .map_err(|never| match never {})
