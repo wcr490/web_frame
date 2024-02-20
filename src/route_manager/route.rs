@@ -83,6 +83,7 @@ impl Route {
                 cur_ptr = cur_ptr.son.entry(ele).or_default();
             }
             cur_ptr.exe = exe;
+
             return true;
         }
         return false;
@@ -109,6 +110,9 @@ impl Route {
     }
     pub fn exe_map(&self) -> HashMap<String, &Exe> {
         let mut res = HashMap::new();
+
+        /* BUG  */
+        /* solve 2.20  */
         for (path, exe) in self.into_iter() {
             res.insert(path, exe);
         }
@@ -131,8 +135,14 @@ impl<'a> Iterator for ExeIter<'a> {
     type Item = (String, &'a Exe);
     fn next(&mut self) -> Option<Self::Item> {
         while let Some(node) = self.stack.pop() {
+            /* BUG - if the node is exeable, it's sons will be ignored  */
+            /* solve 2.20  */
             if node.exeable {
-                return Some((node.exe.path(), &node.exe));
+                let item = (node.exe.path(), &node.exe);
+                for (_, son) in &node.son {
+                    self.stack.push(son);
+                }
+                return Some(item);
             }
             let k: Vec<&String> = node.son.keys().collect();
             for i in (0..k.len()).rev() {
@@ -151,7 +161,9 @@ fn prefix_to_vec(prefix: String) -> Vec<String> {
     while let Some(index) = temp.find("/") {
         // println!("before: vec = {:#?}\n\rindex = {}", target, index);
         // println!("before: str = {:#?}", temp);
-        target.push(temp[0..index].to_string());
+        if index != 0 {
+            target.push(temp[0..index].to_string());
+        }
         temp = temp[(index + 1)..temp.len()].to_string();
         // println!("after: str = {:#?}", temp);
         // println!("after: str = {:#?}", target);
