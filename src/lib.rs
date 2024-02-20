@@ -103,18 +103,6 @@ macro_rules! exe_generate {
     };
 }
 
-exe_generate!(ExampleTwo, "ex".to_string(), {
-    println!("example_two");
-    Ok::<_, hyper::Error>(Response::new(full(
-        fs::read_to_string("hello.html").unwrap(),
-    )))
-});
-exe_generate!(conf, ExampleThree, "/exam".to_string(), {
-    println!("three");
-    Ok::<_, hyper::Error>(Response::new(full(
-        fs::read_to_string("hello.html").unwrap(),
-    )))
-});
 #[cfg(test)]
 mod test {
     use super::*;

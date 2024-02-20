@@ -7,33 +7,32 @@ use tokio::net::TcpListener;
 use hyper::Response;
 use std::fs;
 
-use frame::{conf_to_iter, exe_generate, ExampleThree};
+use frame::exe_generate;
 use frame::{hyper_manager::server::*, route_manager::route::*, Config};
+exe_generate!(Kk, "/exam".to_string(), {
+    println!("Kk success");
+    Ok::<_, hyper::Error>(Response::new(full(
+        fs::read_to_string("hello.html").unwrap(),
+    )))
+});
 
+exe_generate!(Gg, "/exam/gg".to_string(), {
+    println!("Gg success");
+    Ok::<_, hyper::Error>(Response::new(full(
+        fs::read_to_string("hello.html").unwrap(),
+    )))
+});
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
     let mut route = Route::new();
+
     route.insert_path("/exam".to_string());
-    // route.insert_path("/exam/gg".to_string());
-    exe_generate!(Exam, "/exam".to_string(), {
-        println!("success");
-        Ok::<_, hyper::Error>(Response::new(full(
-            fs::read_to_string("hello.html").unwrap(),
-        )))
-    });
-    // exe_generate!(GG, "/exam/gg".to_string(), {
-    //     println!("success");
-    //     Ok::<_, hyper::Error>(Response::new(full(
-    //         fs::read_to_string("hello.html").unwrap(),
-    //     )))
-    // });
-    route.insert_exe(Box::new(Exam), "/exam".to_string());
-    // route.insert_exe(Box::new(GG), "/exam/gg".to_string());
-    // println!("{:#?}", route.search("/example".to_string()));
-    // println!("{:#?}", route.addr_vec());
+    route.insert_path("/exam/gg".to_string());
+
+    route.insert_exe(Box::new(Kk), "/exam".to_string());
+    route.insert_exe(Box::new(Gg), "/exam/gg".to_string());
 
     let conf = Config::with_route(route);
-
     run_server(addr, conf).await
 }
