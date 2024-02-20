@@ -17,9 +17,11 @@ use std::sync::Arc;
 
 pub async fn run_server(
     addr: SocketAddr,
-    conf: Arc<Mutex<Config>>,
+    conf: Config,
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let listener = tokio::net::TcpListener::bind(addr).await?;
+
+    let conf = Arc::new(Mutex::new(conf));
     loop {
         let conf_clone = Arc::clone(&conf);
         let (stream, _) = listener.accept().await?;
@@ -33,8 +35,17 @@ pub async fn run_server(
                         async move {
                             let guard = conf_clone.lock().await;
                             let config = (*guard).clone();
+                            for exe in config.exe().values() {
+                                println!("checkpath: {}", exe.0.path());
+                                exe.0.call();
+                            }
                             let exe = req_to_exe(&config, req).await;
-                            let fut = async move { exe.unwrap().0.call() };
+                            let fut = async move {
+                                match exe {
+                                    Some(exist) => exist.0.call(),
+                                    None => DefaultCallback.call(),
+                                }
+                            };
                             fut.await
                         }
                     }),
@@ -46,9 +57,12 @@ pub async fn run_server(
         });
     }
 }
+//TODO: complement the method judgment
 async fn req_to_exe(conf: &Config, req: Request<hyper::body::Incoming>) -> Option<&Cb> {
     let path = req.uri().path().to_string();
-    if conf.exec.contains_key(&path) && conf.method.contains_key(&path) {
+    println!("current page: {}", path);
+    if conf.exec.contains_key(&path) {
+        println!("{}", conf.exe().get(&path).unwrap().0.path());
         conf.exec.get(&path).clone()
     } else {
         None

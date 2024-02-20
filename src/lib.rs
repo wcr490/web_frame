@@ -11,6 +11,7 @@ use std::sync::Arc;
 use hyper_manager::server::*;
 use route_manager::route::*;
 
+pub struct Cb(pub Box<dyn Callback>);
 pub struct Config {
     pub exec: HashMap<String, Cb>,
     method: HashMap<String, Method>,
@@ -31,14 +32,9 @@ impl Clone for Config {
         config
     }
 }
-pub struct Cb(Box<dyn Callback>);
 unsafe impl Sync for Cb {}
 unsafe impl Send for Cb {}
-pub struct ArcConfig(Arc<Config>);
-unsafe impl Send for Config {}
-unsafe impl Sync for Config {}
-unsafe impl Send for ArcConfig {}
-unsafe impl Sync for ArcConfig {}
+
 impl Config {
     pub fn new() -> Self {
         Config {
@@ -48,8 +44,12 @@ impl Config {
     }
     pub fn with_route(route: Route) -> Self {
         let exec = route.exe_map();
+        let mut exe_map: HashMap<_, Cb> = HashMap::new();
+        for (k, v) in exec {
+            exe_map.insert(k, Cb(v.clone()));
+        }
         Config {
-            exec: HashMap::new(),
+            exec: exe_map,
             method: HashMap::new(),
         }
     }
@@ -72,6 +72,7 @@ macro_rules! conf_to_iter {
 macro_rules! exe_generate {
     () => {};
     ($name: ident, $path: expr, $body: block) => {
+        #[derive(Clone)]
         pub struct $name;
         impl Callback for $name {
             fn call(&self) -> Result<Resp, hyper::Error> {
@@ -79,10 +80,14 @@ macro_rules! exe_generate {
             }
             fn path(&self) -> String {
                 $path
+            }
+            fn box_clone(&self) -> Exe {
+                Box::new((*self).clone())
             }
         }
     };
     ($conf: expr,$name: ident, $path: expr, $body: block) => {
+        #[derive(Clone)]
         pub struct $name;
         impl Callback for $name {
             fn call(&self) -> Result<Resp, hyper::Error> {
@@ -90,6 +95,9 @@ macro_rules! exe_generate {
             }
             fn path(&self) -> String {
                 $path
+            }
+            fn box_clone(&self) -> Exe {
+                Box::new((*self).clone())
             }
         }
     };

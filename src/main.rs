@@ -22,7 +22,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         )))
     });
     route.insert_exe(Box::new(Exam), "/exam".to_string());
+    // println!("{:#?}", route.search("/example".to_string()));
+    // println!("{:#?}", route.addr_vec());
+
     let mut conf = Config::with_route(route);
 
-    run_server(addr, Arc::new(Mutex::new(conf))).await
+    run_server(addr, conf).await
 }

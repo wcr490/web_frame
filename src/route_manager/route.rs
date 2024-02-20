@@ -15,7 +15,7 @@ pub type Exe = Box<dyn Callback>;
 struct RouteNode {
     son: HashMap<String, RouteNode>,
     exe: Exe,
-    can_exe: bool,
+    exeable: bool,
 }
 pub struct Route {
     addr_vec: Vec<String>,
@@ -25,27 +25,35 @@ pub struct Route {
 pub trait Callback {
     fn path(&self) -> String;
     fn call(&self) -> Result<Resp, hyper::Error>;
+    fn box_clone(&self) -> Box<dyn Callback>;
 }
 impl Default for RouteNode {
     fn default() -> Self {
         RouteNode {
             son: HashMap::default(),
             exe: Box::new(DefaultCallback),
-            can_exe: false,
+            exeable: false,
         }
     }
 }
+impl Clone for Exe {
+    fn clone(&self) -> Self {
+        self.box_clone()
+    }
+}
 
+#[derive(Clone)]
 pub struct DefaultCallback;
 impl Callback for DefaultCallback {
     fn path(&self) -> String {
-        "/example".to_string()
+        "/unknown".to_string()
     }
     fn call(&self) -> Result<Resp, hyper::Error> {
-        println!("called");
-        Ok::<_, hyper::Error>(Response::new(full(
-            fs::read_to_string("hello.html").unwrap(),
-        )))
+        println!("unknown path -> default");
+        Ok::<_, hyper::Error>(Response::new(full(fs::read_to_string("404.html").unwrap())))
+    }
+    fn box_clone(&self) -> Exe {
+        Box::new((*self).clone())
     }
 }
 
@@ -64,7 +72,7 @@ impl Route {
         for element in prefix_vec.into_iter() {
             cur_ptr = cur_ptr.son.entry(element).or_insert(RouteNode::default());
         }
-        cur_ptr.can_exe = true;
+        cur_ptr.exeable = true;
         cur_ptr.exe = Box::new(DefaultCallback);
     }
     pub fn insert_exe(&mut self, exe: Exe, prefix: String) -> bool {
@@ -90,7 +98,7 @@ impl Route {
             } else {
                 return (false, res);
             };
-            if cur_ptr.can_exe && element.eq(prefix_vec.last().unwrap()) {
+            if cur_ptr.exeable && element.eq(prefix_vec.last().unwrap()) {
                 return (true, res);
             }
         }
@@ -123,7 +131,7 @@ impl<'a> Iterator for ExeIter<'a> {
     type Item = (String, &'a Exe);
     fn next(&mut self) -> Option<Self::Item> {
         while let Some(node) = self.stack.pop() {
-            if node.can_exe {
+            if node.exeable {
                 return Some((node.exe.path(), &node.exe));
             }
             let k: Vec<&String> = node.son.keys().collect();
