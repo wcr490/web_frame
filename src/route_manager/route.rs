@@ -1,18 +1,50 @@
-use super::super::hyper_manager::server::full;
-use std::collections::HashMap;
-use std::fs;
+use super::*;
 
-use http_body_util::combinators::BoxBody;
-use hyper::body::Bytes;
-use hyper::Response;
 /*
  * based on Trie
  * spend a bit more memory to gain a rapid find_method
  * */
 
-/// alias to keep file tidy
+// alias to keep file tidy
 pub type Resp = Response<BoxBody<Bytes, hyper::Error>>;
 pub type Exe = Box<dyn Callback>;
+
+/// the root
+pub struct Route {
+    /// normally, it is just a shell with nothing really used
+    addr_vec: Vec<String>,
+    root: RouteNode,
+}
+
+/// Default page to tell visitors that the path is undefined
+#[derive(Clone)]
+pub struct DefaultCallback;
+impl Callback for DefaultCallback {
+    fn path(&self) -> String {
+        "/unknown".to_string()
+    }
+    fn call(&self) -> Result<Resp, hyper::Error> {
+        println!("unknown path -> default");
+        Ok::<_, hyper::Error>(Response::new(full(
+            fs::read_to_string("./html/404.html").unwrap(),
+        )))
+    }
+    fn box_clone(&self) -> Exe {
+        Box::new((*self).clone())
+    }
+}
+
+/// the main part of this route-recognizer
+/// Simply, it is a complex version of Trie
+struct RouteNode {
+    /// a map wrap paths and nodes of current node's sons
+    son: HashMap<String, RouteNode>,
+    /// the wraped function
+    exe: Exe,
+    /// the flag embodies whether the node is an availible page
+    exeable: bool,
+}
+
 /// function in Exe must implement this trait
 pub trait Callback {
     /// main function in a Exe
@@ -31,32 +63,6 @@ impl Clone for Exe {
     }
 }
 
-/// Default page to tell visitors that the path is undefined
-#[derive(Clone)]
-pub struct DefaultCallback;
-impl Callback for DefaultCallback {
-    fn path(&self) -> String {
-        "/unknown".to_string()
-    }
-    fn call(&self) -> Result<Resp, hyper::Error> {
-        println!("unknown path -> default");
-        Ok::<_, hyper::Error>(Response::new(full(fs::read_to_string("404.html").unwrap())))
-    }
-    fn box_clone(&self) -> Exe {
-        Box::new((*self).clone())
-    }
-}
-
-/// the main part of this route-recognizer
-/// Simply, it is a complex version of Trie
-struct RouteNode {
-    /// a map wrap paths and nodes of current node's sons
-    son: HashMap<String, RouteNode>,
-    /// the wraped function
-    exe: Exe,
-    /// the flag embodies whether the node is an availible page
-    exeable: bool,
-}
 /// allow you to init a empty Route for debug
 impl Default for RouteNode {
     fn default() -> Self {
@@ -68,12 +74,6 @@ impl Default for RouteNode {
     }
 }
 
-/// the root
-pub struct Route {
-    /// normally, it is just a shell with nothing really used
-    addr_vec: Vec<String>,
-    root: RouteNode,
-}
 /* IMPORTANT */
 impl Route {
     pub fn new() -> Self {

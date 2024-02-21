@@ -12,14 +12,14 @@ use frame::{hyper_manager::server::*, route_manager::route::*, Config};
 exe_generate!(Kk, "/exam".to_string(), {
     println!("Kk success");
     Ok::<_, hyper::Error>(Response::new(full(
-        fs::read_to_string("hello.html").unwrap(),
+        fs::read_to_string("./html/hello.html").unwrap(),
     )))
 });
 
 exe_generate!(Gg, "/exam/gg".to_string(), {
     println!("Gg success");
     Ok::<_, hyper::Error>(Response::new(full(
-        fs::read_to_string("hello.html").unwrap(),
+        fs::read_to_string("./html/hello.html").unwrap(),
     )))
 });
 #[tokio::main]

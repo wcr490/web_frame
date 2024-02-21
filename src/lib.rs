@@ -1,4 +1,5 @@
 pub mod hyper_manager;
+pub mod middleware_manager;
 pub mod route_manager;
 
 use hyper::Method;
@@ -20,6 +21,7 @@ pub struct Config {
     // TODO: complement checker and method of method(GET/POST)
     method: HashMap<String, Method>,
 }
+
 impl Clone for Config {
     fn clone(&self) -> Self {
         let mut config = Config::new();
@@ -45,13 +47,14 @@ impl Config {
     /// more recommended way to create a Config with a prepared Route
     pub fn with_route(route: Route) -> Self {
         let exec = route.exe_map();
+        let method: HashMap<String, Method> = HashMap::new();
         let mut exe_map: HashMap<_, Cb> = HashMap::new();
         for (k, v) in exec {
             exe_map.insert(k, Cb(v.clone()));
         }
         Config {
             exec: exe_map,
-            method: HashMap::new(),
+            method,
         }
     }
 
