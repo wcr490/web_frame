@@ -39,7 +39,6 @@ pub async fn run_server(
         });
     }
 }
-// TODO: complement the method judgment
 /// convert request into Cb which includes exe
 ///
 /// # Parameter

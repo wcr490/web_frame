@@ -1,10 +1,14 @@
 use super::*;
 
 type MidwareExe = Box<dyn Middleware>;
+pub struct Midware(pub MidwareExe, pub RequestType);
+
+pub enum Midware {
+    Get(MidwareExe, RequestType),
+}
 
 pub struct MQueue {
-    inner: VecDeque<Box<dyn Middleware>>,
-    data: RequestType,
+    inner: VecDeque<Midware>,
     is_boot: bool,
 }
 pub enum Priority {
@@ -22,26 +26,24 @@ impl MQueue {
     pub fn new() -> Self {
         MQueue {
             inner: VecDeque::new(),
-            data: RequestType::Empty,
             is_boot: false,
         }
     }
     pub fn boot(&mut self, req: RequestType) -> bool {
         if let Some(head) = self.peek_mut() {
-            head.exe(req);
+            head.1 = req;
             self.is_boot = true;
         }
         self.dequeue()
     }
-    pub fn enqueue(&mut self, item: Box<dyn Middleware>) {
+    pub fn enqueue(&mut self, item: Midware) {
         self.inner.push_back(item);
     }
     pub fn dequeue(&mut self) -> bool {
-        let data_cloned = self.data.clone();
         if self.is_boot {
             if let Some(cur_midware) = self.inner.pop_front() {
-                if let Some(__next_midware) = self.peek() {
-                    self.data = cur_midware.exe(data_cloned);
+                if let Some(next_midware) = self.peek_mut() {
+                    next_midware.1 = cur_midware.0.exe(cur_midware.1);
                     return true;
                 }
                 self.is_boot = false;
@@ -51,10 +53,10 @@ impl MQueue {
         }
         false
     }
-    pub fn peek_mut(&mut self) -> Option<&mut Box<dyn Middleware>> {
+    pub fn peek_mut(&mut self) -> Option<&mut Midware> {
         self.inner.front_mut()
     }
-    pub fn peek(&self) -> Option<&Box<dyn Middleware>> {
+    pub fn peek(&self) -> Option<&Midware> {
         self.inner.front()
     }
     pub fn is_empty(&self) -> bool {

@@ -1,4 +1,5 @@
 use futures::lock::Mutex;
+use hyper::Method;
 use std::borrow::BorrowMut;
 use std::net::SocketAddr;
 use std::sync::Arc;
@@ -7,16 +8,18 @@ use tokio::net::TcpListener;
 use hyper::Response;
 use std::fs;
 
-use frame::exe_generate;
-use frame::{hyper_manager::server::*, route_manager::route::*, Config};
-exe_generate!(Kk, "/exam".to_string(), {
+use frame::{
+    exe_generator, hyper_manager::request_handler::*, hyper_manager::server::*,
+    route_manager::route::*, Config,
+};
+exe_generator!(Kk, "/exam".to_string(), Method::POST, {
     println!("Kk success");
     Ok::<_, hyper::Error>(Response::new(full(
         fs::read_to_string("./html/hello.html").unwrap(),
     )))
 });
 
-exe_generate!(Gg, "/exam/gg".to_string(), {
+exe_generator!(Gg, "/exam/gg".to_string(), Method::POST, {
     println!("Gg success");
     Ok::<_, hyper::Error>(Response::new(full(
         fs::read_to_string("./html/hello.html").unwrap(),

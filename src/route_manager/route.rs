@@ -20,15 +20,19 @@ pub struct Route {
 #[derive(Clone)]
 pub struct DefaultCallback;
 impl Callback for DefaultCallback {
-    fn path(&self) -> String {
-        "/unknown".to_string()
-    }
     fn call(&self) -> Result<Resp, hyper::Error> {
         println!("unknown path -> default");
         Ok::<_, hyper::Error>(Response::new(full(
             fs::read_to_string("./html/404.html").unwrap(),
         )))
     }
+    fn method(&self) -> Method {
+        Method::POST
+    }
+    fn path(&self) -> String {
+        "/unknown".to_string()
+    }
+
     fn box_clone(&self) -> Exe {
         Box::new((*self).clone())
     }
@@ -51,6 +55,8 @@ pub trait Callback {
     /// deal with Request translated from the client
     /// also, Middleware will be added
     fn call(&self) -> Result<Resp, hyper::Error>;
+
+    fn method(&self) -> Method;
 
     /// illustrate the path that the node locates
     fn path(&self) -> String;
@@ -91,7 +97,7 @@ impl Route {
     // TODO: provide more User friendly interfaces to combine these procedures together
     pub fn insert_path(&mut self, path: String) {
         self.addr_vec.push(path.clone());
-        let prefix_vec = path_to_vec(path);
+        let prefix_vec = path_split(path);
         let mut cur_ptr = &mut self.root;
         for element in prefix_vec.into_iter() {
             cur_ptr = cur_ptr.son.entry(element).or_insert(RouteNode::default());
@@ -109,7 +115,7 @@ impl Route {
     /// whether successful determined by the path
     pub fn insert_exe(&mut self, exe: Exe, path: String) -> bool {
         if self.addr_vec().contains(&path) {
-            let vec = path_to_vec(path);
+            let vec = path_split(path);
             let mut cur_ptr = &mut self.root;
             for ele in vec {
                 cur_ptr = cur_ptr.son.entry(ele).or_default();
@@ -133,12 +139,14 @@ impl Route {
     /// # Example
     /// a route has the path /example/apple named example_route
     /// ```
+    /// use frame::route_manager::route::Route;
+    /// let mut example_route = Route::new();
     /// let path = String::from("example/banana");
     /// let (is_valid_path, same_part) = example_route.search(path);
     /// ```
     pub fn search(&mut self, path: String) -> (bool, Vec<String>) {
         let mut res = Vec::new();
-        let prefix_vec = path_to_vec(path.clone());
+        let prefix_vec = path_split(path.clone());
         let mut cur_ptr = &mut self.root;
         for element in prefix_vec.clone().into_iter() {
             cur_ptr = if cur_ptr.son.contains_key(&element) {
@@ -226,8 +234,9 @@ impl<'a> Iterator for ExeIter<'a> {
 ///
 /// # Example
 /// ```
+/// use frame::route_manager::route::path_split;
 /// let path = String::from("raw/example/waiting/for/advanced/treatment");
-/// let vector = path_to_vec(path);
+/// let vector = path_split(path);
 /// println!("{:#?}", vector);
 /// ```
 /// output:
@@ -239,7 +248,7 @@ impl<'a> Iterator for ExeIter<'a> {
 ///     "advanced",
 ///     "treatment",
 /// ]
-pub fn path_to_vec(path: String) -> Vec<String> {
+pub fn path_split(path: String) -> Vec<String> {
     let mut temp = path.clone();
     let mut target = Vec::new();
     while let Some(index) = temp.find("/") {
