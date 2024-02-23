@@ -1,12 +1,12 @@
 use super::*;
 
-type MidwareExe = Box<dyn Middleware>;
-
 pub struct MQueue {
     inner: VecDeque<Box<dyn Middleware>>,
     data: RequestType,
     is_boot: bool,
 }
+unsafe impl Send for MQueue {}
+
 pub enum Priority {
     Unknown,
     P1,

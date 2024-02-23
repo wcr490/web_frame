@@ -6,17 +6,18 @@ pub enum RequestType {
     GET(HashMap<String, String>),
     POST,
 }
-pub async fn req_init(req: Request<hyper::body::Incoming>) -> RequestType {
+pub async fn req_init(req: &Request<hyper::body::Incoming>) -> RequestType {
+    //it's a path
+    if req.uri().query() == None {
+        return RequestType::Empty;
+    }
     //We normally assume that only GET requests have query
     //So
     //If type of the request is GET
     if req.method().eq(&Method::GET) {
-        if let Some(query) = req.uri().query() {
-            let val_vec = query_split(query).await;
-            return RequestType::GET(symbol_map(val_vec).await);
-        } else {
-            return RequestType::POST;
-        }
+        let query = req.uri().query().unwrap();
+        let val_vec = query_split(query).await;
+        return RequestType::GET(symbol_map(val_vec).await);
     }
     //If type of the request is POST
     else {
@@ -42,6 +43,3 @@ pub async fn symbol_map(vec: Vec<&str>) -> HashMap<String, String> {
     }
     map
 }
-
-#[test]
-fn test_split() {}

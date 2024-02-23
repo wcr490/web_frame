@@ -21,14 +21,40 @@ pub async fn run_server(
                         let conf_clone = Arc::clone(&conf_clone);
                         async move {
                             let guard = conf_clone.lock().await;
-                            let exe = req_to_exe(&guard, req).await;
-                            let fut = async move {
-                                match exe {
-                                    Some(exist) => exist.0.call(),
-                                    None => DefaultCallback.call(),
+                            let path = req.uri().path().to_string().clone();
+                            let uri = req.uri().query();
+                            match req_init(&req).await {
+                                RequestType::Empty => {
+                                    let exe = req_to_exe(&guard, path.to_string()).await;
+                                    let fut = async move {
+                                        match exe {
+                                            Some(exist) => exist.0.call(),
+                                            None => DefaultCallback.call(),
+                                        }
+                                    };
+                                    fut.await
                                 }
-                            };
-                            fut.await
+                                RequestType::GET(map) => {
+                                    let exe = req_to_exe(&guard, path.to_string()).await;
+                                    let fut = async move {
+                                        match exe {
+                                            Some(exist) => exist.0.call(),
+                                            None => DefaultCallback.call(),
+                                        }
+                                    };
+                                    fut.await
+                                }
+                                RequestType::POST => {
+                                    let exe = req_to_exe(&guard, path.to_string()).await;
+                                    let fut = async move {
+                                        match exe {
+                                            Some(exist) => exist.0.call(),
+                                            None => DefaultCallback.call(),
+                                        }
+                                    };
+                                    fut.await
+                                }
+                            }
                         }
                     }),
                 )
@@ -47,8 +73,7 @@ pub async fn run_server(
 ///
 /// # Return
 /// * Option<&Cb>
-async fn req_to_exe(conf: &Config, req: Request<hyper::body::Incoming>) -> Option<&Cb> {
-    let path = req.uri().path().to_string();
+async fn req_to_exe(conf: &Config, path: String) -> Option<&Cb> {
     println!("current page: {}", path);
     if conf.exec.contains_key(&path) {
         conf.exec.get(&path).clone()
