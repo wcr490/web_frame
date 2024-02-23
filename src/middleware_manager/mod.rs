@@ -8,8 +8,9 @@
  *       E.g. mw_get.rs
  *            mw_redis.rs
  * */
-pub mod mw_get;
 pub mod mw_queue;
+
+pub mod mw_get;
 
 use super::hyper_manager::request_handler::*;
 use super::route_manager::route::*;
@@ -45,7 +46,7 @@ macro_rules! midware_method_generator {
 fn queue() {
     let mut map = HashMap::new();
     map.insert("a".to_string(), "199".to_string());
-    let mut q = MQueue::new();
+    let mut q = MwQueue::new();
     q.enqueue(Box::new(Get));
     let res = q.boot(RequestType::GET(map));
     assert_eq!(true, res);

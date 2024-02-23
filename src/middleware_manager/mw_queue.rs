@@ -1,11 +1,16 @@
 use super::*;
 
-pub struct MQueue {
+pub type MwQueueMap = HashMap<Flag, MwQueue>;
+
+pub struct MwQueue {
     inner: VecDeque<Box<dyn Middleware>>,
     data: RequestType,
     is_boot: bool,
 }
-unsafe impl Send for MQueue {}
+unsafe impl Send for MwQueue {}
+unsafe impl Sync for MwQueue {}
+
+pub struct Flag(String);
 
 pub enum Priority {
     Unknown,
@@ -18,9 +23,9 @@ pub trait Middleware {
     fn priority(&self) -> Priority;
 }
 
-impl MQueue {
+impl MwQueue {
     pub fn new() -> Self {
-        MQueue {
+        MwQueue {
             inner: VecDeque::new(),
             data: RequestType::Empty,
             is_boot: false,

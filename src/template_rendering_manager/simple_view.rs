@@ -1,10 +1,12 @@
 use super::*;
+
 // alias to keep file tidy
+pub type ViewMap = HashMap<String, ViewCb>;
 /// Specially used by Config to implement Clone
-pub struct Cb(pub Box<dyn Callback>);
+pub struct ViewCb(pub Box<dyn Callback>);
 ///neccessary trait due to multithreading
-unsafe impl Sync for Cb {}
-unsafe impl Send for Cb {}
+unsafe impl Sync for ViewCb {}
+unsafe impl Send for ViewCb {}
 
 /// A macro used to automatically register a struct which has been implemented Callback
 ///

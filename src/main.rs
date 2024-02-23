@@ -35,7 +35,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     /* Middleware Queue Testing */
     let mut map = HashMap::new();
     map.insert("a".to_string(), "199".to_string());
-    let mut q = MQueue::new();
+    let mut q = MwQueue::new();
     q.enqueue(Box::new(Get));
     let res = q.boot(RequestType::GET(map));
 

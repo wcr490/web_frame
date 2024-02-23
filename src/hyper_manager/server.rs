@@ -73,10 +73,10 @@ pub async fn run_server(
 ///
 /// # Return
 /// * Option<&Cb>
-async fn req_to_exe(conf: &Config, path: String) -> Option<&Cb> {
+async fn req_to_exe(conf: &Config, path: String) -> Option<&ViewCb> {
     println!("current page: {}", path);
-    if conf.exec.contains_key(&path) {
-        conf.exec.get(&path).clone()
+    if conf.view.contains_key(&path) {
+        conf.view.get(&path).clone()
     } else {
         None
     }
