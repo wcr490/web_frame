@@ -32,9 +32,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
     let mut route = Route::new();
     route.insert_path("/exam".to_string());
-    route.insert_path("/exam/gg".to_string());
+    route.insert_path("/exam/press".to_string());
     route.insert_exe(Box::new(Kk), "/exam".to_string());
-    route.insert_exe(Box::new(Gg), "/exam/gg".to_string());
+    route.insert_exe(Box::new(Gg), "/exam/press".to_string());
     let conf = Config::with_route_queue(route, q_map);
 
     run_server(addr, conf).await
