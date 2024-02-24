@@ -8,6 +8,7 @@ use hyper_manager::server::*;
 use middleware_manager::mw_queue::*;
 use route_manager::route::*;
 use std::collections::HashMap;
+use template_rendering_manager::example_view::*;
 use template_rendering_manager::simple_view::*;
 
 /// essential struct

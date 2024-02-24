@@ -2,6 +2,7 @@ use super::*;
 
 pub type MwQueueMap = HashMap<Flag, MwQueue>;
 
+#[derive(Clone)]
 pub struct MwQueue {
     inner: VecDeque<Box<dyn Middleware>>,
     data: RequestType,
@@ -10,7 +11,13 @@ pub struct MwQueue {
 unsafe impl Send for MwQueue {}
 unsafe impl Sync for MwQueue {}
 
-pub struct Flag(String);
+#[derive(Hash, Eq, Clone)]
+pub struct Flag(pub String);
+impl PartialEq for Flag {
+    fn eq(&self, other: &Self) -> bool {
+        other.0 == self.0
+    }
+}
 
 pub enum Priority {
     Unknown,
@@ -21,6 +28,12 @@ pub enum Priority {
 pub trait Middleware {
     fn exe(&self, req: RequestType) -> RequestType;
     fn priority(&self) -> Priority;
+    fn box_clone(&self) -> Box<dyn Middleware>;
+}
+impl Clone for Box<dyn Middleware> {
+    fn clone(&self) -> Self {
+        self.box_clone()
+    }
 }
 
 impl MwQueue {
@@ -75,10 +88,6 @@ macro_rules! mw_queue_generator {
     () => {};
     ($queue: expr, $($midwares: expr),+) => {
         {
-            // let vec = [$($midwares),+];
-            // for mw in vec {
-            //     $queue.enqueue(Box::new(mw));
-            // }
             $($queue.enqueue(Box::new($midwares));)+
         }
 

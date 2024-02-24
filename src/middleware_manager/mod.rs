@@ -8,6 +8,7 @@
  *       E.g. mw_get.rs
  *            mw_redis.rs
  * */
+
 pub mod mw_queue;
 
 pub mod mw_get;
@@ -16,6 +17,7 @@ use super::hyper_manager::request_handler::*;
 use super::route_manager::route::*;
 use mw_get::*;
 use mw_queue::*;
+use std::hash::Hash;
 
 use std::collections::HashMap;
 use std::collections::VecDeque;
@@ -24,6 +26,7 @@ use std::collections::VecDeque;
 macro_rules! midware_generator {
     () => {};
     ($name: ident) => {
+        #[derive(Clone)]
         pub struct $name;
     };
 }
@@ -38,6 +41,9 @@ macro_rules! midware_method_generator {
             }
             fn priority(&self) -> Priority {
                 $priority
+            }
+            fn box_clone(&self) -> Box<dyn Middleware> {
+                Box::new((*self).clone())
             }
         }
     };

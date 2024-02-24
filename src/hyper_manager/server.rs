@@ -20,7 +20,7 @@ pub async fn run_server(
                     service_fn(move |req| {
                         let conf_clone = Arc::clone(&conf_clone);
                         async move {
-                            let guard = conf_clone.lock().await;
+                            let mut guard = conf_clone.lock().await;
                             let path = req.uri().path().to_string().clone();
                             let uri = req.uri().query();
                             match req_init(&req).await {
@@ -35,6 +35,16 @@ pub async fn run_server(
                                     fut.await
                                 }
                                 RequestType::GET(map) => {
+                                    let map_temp = map.clone();
+                                    if let Some(flag) = map.get("flag") {
+                                        let mut queue_cloned = guard.queue.clone();
+                                        for queue in queue_cloned.iter_mut() {
+                                            if queue.0 .0 == flag.to_string() {
+                                                queue.1.boot(RequestType::GET(map_temp.clone()));
+                                            }
+                                        }
+                                    }
+
                                     let exe = req_to_exe(&guard, path.to_string()).await;
                                     let fut = async move {
                                         match exe {

@@ -9,6 +9,7 @@ use tokio::net::TcpListener;
 use hyper::Response;
 use std::fs;
 
+use frame::template_rendering_manager::example_view::*;
 use frame::{
     exe_generator,
     hyper_manager::request_handler::*,
@@ -18,28 +19,14 @@ use frame::{
     route_manager::route::*,
     Config,
 };
-exe_generator!(Kk, "/exam".to_string(), Method::POST, {
-    println!("Kk success");
-    Ok::<_, hyper::Error>(Response::new(full(
-        fs::read_to_string("./html/hello.html").unwrap(),
-    )))
-});
 
-exe_generator!(Gg, "/exam/gg".to_string(), Method::POST, {
-    println!("Gg success");
-    Ok::<_, hyper::Error>(Response::new(full(
-        fs::read_to_string("./html/hello.html").unwrap(),
-    )))
-});
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     /* Middleware Queue Testing */
-    let mut map = HashMap::new();
-    map.insert("a".to_string(), "199".to_string());
     let mut q = MwQueue::new();
     mw_queue_generator!(q, Get);
-    let mut qmap = HashMap::new();
-    mw_queue_map_generator!(qmap, "just_get_it" => q);
+    let mut q_map = HashMap::new();
+    mw_queue_map_generator!(q_map, Flag("just_get_it".to_string()) => q);
 
     /* Server Testing */
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
@@ -48,6 +35,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     route.insert_path("/exam/gg".to_string());
     route.insert_exe(Box::new(Kk), "/exam".to_string());
     route.insert_exe(Box::new(Gg), "/exam/gg".to_string());
-    let conf = Config::with_route(route);
+    let conf = Config::with_route_queue(route, q_map);
+
     run_server(addr, conf).await
 }
