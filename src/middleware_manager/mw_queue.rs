@@ -69,3 +69,30 @@ impl MwQueue {
         self.inner.len()
     }
 }
+
+#[macro_export]
+macro_rules! mw_queue_generator {
+    () => {};
+    ($queue: expr, $($midwares: expr),+) => {
+        {
+            // let vec = [$($midwares),+];
+            // for mw in vec {
+            //     $queue.enqueue(Box::new(mw));
+            // }
+            $($queue.enqueue(Box::new($midwares));)+
+        }
+
+    };
+}
+
+#[macro_export]
+macro_rules! mw_queue_map_generator {
+    () => {};
+    ($map: expr, $($flag: expr => $queue: expr),+) => {
+        {
+            $($map.insert($flag, $queue);)+
+        }
+    };
+}
+#[test]
+fn test() {}

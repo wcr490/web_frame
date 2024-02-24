@@ -14,6 +14,7 @@ use frame::{
     hyper_manager::request_handler::*,
     hyper_manager::server::*,
     middleware_manager::{mw_get::*, mw_queue::*},
+    mw_queue_generator, mw_queue_map_generator,
     route_manager::route::*,
     Config,
 };
@@ -36,8 +37,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let mut map = HashMap::new();
     map.insert("a".to_string(), "199".to_string());
     let mut q = MwQueue::new();
-    q.enqueue(Box::new(Get));
-    let res = q.boot(RequestType::GET(map));
+    mw_queue_generator!(q, Get);
+    let mut qmap = HashMap::new();
+    mw_queue_map_generator!(qmap, "just_get_it" => q);
 
     /* Server Testing */
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
