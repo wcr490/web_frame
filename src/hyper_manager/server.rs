@@ -1,3 +1,5 @@
+use std::io::Read;
+
 use super::*;
 
 /// main function to boot the server provided by Hyper
@@ -53,8 +55,16 @@ pub async fn run_server(
                                     };
                                     fut.await
                                 }
-                                RequestType::POST(bytes) => {
-                                    println!("{:#?}", bytes);
+                                RequestType::POST(map) => {
+                                    let map_temp = map.clone();
+                                    if let Some(flag) = map.get("flag") {
+                                        let mut queue_cloned = guard.queue.clone();
+                                        for queue in queue_cloned.iter_mut() {
+                                            if queue.0 .0 == flag.to_string() {
+                                                queue.1.boot(RequestType::POST(map_temp.clone()));
+                                            }
+                                        }
+                                    }
                                     let exe = req_to_exe(&guard, path.to_string()).await;
                                     let fut = async move {
                                         match exe {
