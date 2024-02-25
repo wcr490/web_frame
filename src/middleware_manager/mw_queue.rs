@@ -40,7 +40,7 @@ impl MwQueue {
     pub fn new() -> Self {
         MwQueue {
             inner: VecDeque::new(),
-            data: RequestType::Empty,
+            data: RequestType::GetEmpty,
             is_boot: false,
         }
     }

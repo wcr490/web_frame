@@ -29,12 +29,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     mw_queue_map_generator!(q_map, Flag("just_get_it".to_string()) => q);
 
     /* Server Testing */
-    let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
+    let addr = SocketAddr::from(([192, 168, 3, 148], 3000));
     let mut route = Route::new();
     route.insert_path("/exam".to_string());
     route.insert_path("/exam/press".to_string());
+    route.insert_path("/exam/post".to_string());
     route.insert_exe(Box::new(Kk), "/exam".to_string());
     route.insert_exe(Box::new(Gg), "/exam/press".to_string());
+    route.insert_exe(Box::new(Pp), "/exam/post".to_string());
     let conf = Config::with_route_queue(route, q_map);
 
     run_server(addr, conf).await

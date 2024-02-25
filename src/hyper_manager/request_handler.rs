@@ -2,26 +2,30 @@ use super::*;
 
 #[derive(Clone)]
 pub enum RequestType {
-    Empty,
+    GetEmpty,
+    PostEmpty,
     GET(HashMap<String, String>),
-    POST,
+    POST(HttpBytes),
 }
-pub async fn req_init(req: &Request<hyper::body::Incoming>) -> RequestType {
-    //it's a path
-    if req.uri().query() == None {
-        return RequestType::Empty;
-    }
+pub async fn req_init(req: Request<hyper::body::Incoming>) -> RequestType {
     //We normally assume that only GET requests have query
     //So
     //If type of the request is GET
     if req.method().eq(&Method::GET) {
-        let query = req.uri().query().unwrap();
-        let val_vec = query_split(query).await;
-        return RequestType::GET(symbol_map(val_vec).await);
+        if let Some(query) = req.uri().query() {
+            let val_vec = query_split(query).await;
+            return RequestType::GET(symbol_map(val_vec).await);
+        } else {
+            return RequestType::GetEmpty;
+        }
     }
     //If type of the request is POST
     else {
-        return RequestType::POST;
+        if let Ok(bytes_collected) = req.collect().await {
+            return RequestType::POST(bytes_collected.to_bytes());
+        } else {
+            return RequestType::PostEmpty;
+        }
     }
 }
 pub async fn query_split(query: &str) -> Vec<&str> {

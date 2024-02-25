@@ -20,11 +20,10 @@ pub async fn run_server(
                     service_fn(move |req| {
                         let conf_clone = Arc::clone(&conf_clone);
                         async move {
-                            let mut guard = conf_clone.lock().await;
+                            let guard = conf_clone.lock().await;
                             let path = req.uri().path().to_string().clone();
-                            let uri = req.uri().query();
-                            match req_init(&req).await {
-                                RequestType::Empty => {
+                            match req_init(req).await {
+                                RequestType::GetEmpty | RequestType::PostEmpty => {
                                     let exe = req_to_exe(&guard, path.to_string()).await;
                                     let fut = async move {
                                         match exe {
@@ -54,7 +53,8 @@ pub async fn run_server(
                                     };
                                     fut.await
                                 }
-                                RequestType::POST => {
+                                RequestType::POST(bytes) => {
+                                    println!("{:#?}", bytes);
                                     let exe = req_to_exe(&guard, path.to_string()).await;
                                     let fut = async move {
                                         match exe {
@@ -92,7 +92,7 @@ async fn req_to_exe(conf: &Config, path: String) -> Option<&ViewCb> {
     }
 }
 /// convert String into BoxBody which can be the response
-pub fn full<T: Into<Bytes>>(chunk: T) -> BoxBody<Bytes, hyper::Error> {
+pub fn full<T: Into<HttpBytes>>(chunk: T) -> BoxBody<HttpBytes, hyper::Error> {
     Full::new(chunk.into())
         .map_err(|never| match never {})
         .boxed()

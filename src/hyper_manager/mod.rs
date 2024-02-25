@@ -4,7 +4,7 @@ pub mod server;
 use super::middleware_manager::{mw_get::*, mw_queue::*};
 use super::*;
 use http_body_util::{combinators::BoxBody, BodyExt, Full};
-use hyper::body::{Body, Bytes, Frame};
+use hyper::body::{Body, Bytes as HttpBytes, Frame};
 use hyper::server::conn::http1;
 use hyper::service::service_fn;
 use hyper::Uri;
