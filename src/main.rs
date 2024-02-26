@@ -1,5 +1,6 @@
 use futures::lock::Mutex;
 use hyper::Method;
+use mini_redis::{client, Result as RedisResult};
 use std::borrow::BorrowMut;
 use std::collections::HashMap;
 use std::net::SocketAddr;
@@ -22,6 +23,12 @@ use frame::{
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    /* Redis Testing */
+    let mut client = client::connect("127.0.0.1:6379").await?;
+    client.set("hello world", "hey".into()).await?;
+    let res = client.get("hello world").await?;
+    println!("{:#?}", res);
+
     /* Middleware Queue Testing */
     let mut get_q = MwQueue::new();
     mw_queue_generator!(get_q, Get);
