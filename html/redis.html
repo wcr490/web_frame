@@ -6,12 +6,19 @@
   </head>
   <body>
     <form method="post">
-      <label for="data">data to redis: </label><br>
-      <input type="hidden" name="redis_flag" value="Info">
+      <label for="data">write into redis: </label><br>
+      <input type="hidden" name="redis_flag" value="InfoWrite">
       <input type="hidden" name="flag" value="redis_flag">
       <input type="test" name="data" value="" id="data"><br>
       <input type="text" name="data2" value=""><br>
       <input type="submit" name="" value="post">
-    </form>
+      </form>
+     <form method="post">
+      <label for="data">read from redis: </label><br>
+      <input type="hidden" name="redis_flag" value="InfoRead">
+      <input type="hidden" name="flag" value="redis_flag">
+      <input type="hidden" name="redis_read" value="data,data2">
+      <input type="submit" name="" value="read">
+    </form>   
   </body>
 </html>

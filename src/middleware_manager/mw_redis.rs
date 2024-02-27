@@ -4,21 +4,21 @@ use mini_redis::{client as RedisClient, Result as RedisResult};
 use tokio::task;
 
 enum FrameType {
-    StatelessInfo,
+    StatelessInfoWrite,
+    StatelessInfoRead,
     Auth,
     Unknown,
 }
 
 midware_generator!(Redis);
 midware_method_generator!(Redis, Priority::P2, |req: RequestType| {
-    println!("redis");
     /* It should have a thread pool int the later version */
     if let RequestType::POST(map) = req.clone() {
         task::block_in_place(|| {
             tokio::runtime::Runtime::new()
-                .expect("fail to build a new rt")
+                .expect("redis: fail to build a new rt")
                 .block_on(redis_connect(map))
-                .expect("rt dropped for some errors");
+                .expect("redis: rt dropped for some errors");
         });
     }
     req
@@ -38,7 +38,8 @@ async fn redis_connect(map: HashMap<String, String>) -> RedisResult<()> {
     };
     match frame_type {
         FrameType::Unknown => {}
-        FrameType::StatelessInfo => return write_stateless_info(&mut client, map).await,
+        FrameType::StatelessInfoWrite => return write_stateless_info(&mut client, map).await,
+        FrameType::StatelessInfoRead => return read_stateless_info(&mut client, map).await,
         FrameType::Auth => {}
     }
     Ok(())
@@ -47,7 +48,8 @@ async fn redis_connect(map: HashMap<String, String>) -> RedisResult<()> {
 async fn type_ident(flag: String) -> Option<FrameType> {
     if !flag.is_empty() {
         match flag.as_ref() {
-            "Info" => return Some(FrameType::StatelessInfo),
+            "InfoWrite" => return Some(FrameType::StatelessInfoWrite),
+            "InfoRead" => return Some(FrameType::StatelessInfoRead),
             "Auth" => return Some(FrameType::Auth),
             _ => return Some(FrameType::Unknown),
         }
@@ -61,8 +63,41 @@ async fn write_stateless_info(
     map: HashMap<String, String>,
 ) -> RedisResult<()> {
     for (k, v) in map {
-        println!("write: {} to {}", v, k);
+        if k == "flag" || k == "redis_flag" {
+            continue;
+        }
+        println!("redis: write {} to {}", v, k);
         client.set(&k, v.into()).await?;
     }
     Ok(())
+}
+async fn read_stateless_info(
+    client: &mut RedisClient::Client,
+    map: HashMap<String, String>,
+) -> RedisResult<()> {
+    if let Some(v) = map.get("redis_read") {
+        let mut ret: HashMap<String, String> = HashMap::new();
+        let vec = split_comma(v.to_string()).await;
+        println!("{:#?}", vec);
+        for k in vec {
+            if let Some(v) = client.get(k.as_ref()).await? {
+                ret.insert(
+                    k.to_string(),
+                    String::from_utf8(v.to_vec()).expect("fail to parse"),
+                );
+            }
+        }
+        println!("{:#?}", ret);
+    }
+    Ok(())
+}
+async fn split_comma(str: String) -> Vec<String> {
+    let mut tmp = str.clone();
+    let mut vec: Vec<String> = Vec::new();
+    while let Some(comma) = tmp.find("%2C") {
+        vec.push(tmp[0..comma].to_string());
+        tmp = tmp[comma + 3..].to_string();
+    }
+    vec.push(tmp);
+    vec
 }

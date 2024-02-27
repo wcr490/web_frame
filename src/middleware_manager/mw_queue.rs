@@ -6,6 +6,7 @@ pub type MwQueueMap = HashMap<Flag, MwQueue>;
 pub struct MwQueue {
     inner: VecDeque<Box<dyn Middleware>>,
     data: RequestType,
+    ret: ResponseType,
     is_boot: bool,
 }
 unsafe impl Send for MwQueue {}
@@ -20,7 +21,6 @@ impl PartialEq for Flag {
 }
 
 pub enum Priority {
-    Unknown,
     P1,
     P2,
     P3,
@@ -41,6 +41,7 @@ impl MwQueue {
         MwQueue {
             inner: VecDeque::new(),
             data: RequestType::GetEmpty,
+            ret: ResponseType::Empty,
             is_boot: false,
         }
     }
@@ -65,7 +66,6 @@ impl MwQueue {
                 if let Some(__next_midware) = self.peek() {
                     self.data = cur_midware.exe(data_cloned);
                     self.dequeue();
-                    return true;
                 } else {
                     self.data = cur_midware.exe(data_cloned);
                     println!("finish");
@@ -90,6 +90,10 @@ impl MwQueue {
     pub fn len(&self) -> usize {
         self.inner.len()
     }
+}
+
+fn response_ident(map: RequestType) {
+    unimplemented!()
 }
 
 #[macro_export]

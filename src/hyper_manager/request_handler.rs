@@ -7,6 +7,13 @@ pub enum RequestType {
     GET(HashMap<String, String>),
     POST(HashMap<String, String>),
 }
+#[derive(Clone, Debug)]
+pub enum ResponseType {
+    Empty,
+    StatusCode,
+    Bytes,
+    View,
+}
 
 pub async fn req_init(req: Request<hyper::body::Incoming>) -> RequestType {
     //We normally assume that only GET requests have query
