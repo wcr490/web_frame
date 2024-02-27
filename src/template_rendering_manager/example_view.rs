@@ -15,6 +15,6 @@ exe_generator!(Gg, "/exam/press".to_string(), Method::POST, {
 
 exe_generator!(Pp, "/exam/post".to_string(), Method::POST, {
     Ok::<_, hyper::Error>(Response::new(full(
-        fs::read_to_string("./html/post.html").unwrap(),
+        fs::read_to_string("./html/redis.html").unwrap(),
     )))
 });

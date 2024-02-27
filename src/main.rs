@@ -15,7 +15,7 @@ use frame::{
     exe_generator,
     hyper_manager::request_handler::*,
     hyper_manager::server::*,
-    middleware_manager::{mw_get::*, mw_post::*, mw_queue::*},
+    middleware_manager::{mw_get::*, mw_post::*, mw_queue::*, mw_redis::*},
     mw_queue_generator, mw_queue_map_generator,
     route_manager::route::*,
     Config,
@@ -24,18 +24,18 @@ use frame::{
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     /* Redis Testing */
-    let mut client = client::connect("127.0.0.1:6379").await?;
-    client.set("hello world", "hey".into()).await?;
-    let res = client.get("hello world").await?;
-    println!("{:#?}", res);
+    // let mut client = client::connect("127.0.0.1:6379").await?;
+    // client.set("hello world", "hey".into()).await?;
+    // let res = client.get("hello world").await?;
+    // println!("{:#?}", res);
 
     /* Middleware Queue Testing */
     let mut get_q = MwQueue::new();
     mw_queue_generator!(get_q, Get);
     let mut post_q = MwQueue::new();
-    mw_queue_generator!(post_q, Post);
+    mw_queue_generator!(post_q, Post, Redis);
     let mut q_map = HashMap::new();
-    mw_queue_map_generator!(q_map, Flag("just_get_it".to_string()) => get_q, Flag("just_post_it".to_string()) => post_q);
+    mw_queue_map_generator!(q_map, Flag("just_get_it".to_string()) => get_q, Flag("redis_flag".to_string()) => post_q);
 
     /* Server Testing */
     let addr = SocketAddr::from(([192, 168, 3, 148], 3000));

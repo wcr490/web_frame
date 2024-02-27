@@ -46,7 +46,9 @@ impl MwQueue {
     }
     pub fn boot(&mut self, req: RequestType) -> bool {
         if let Some(head) = self.peek_mut() {
-            head.exe(req);
+            println!("boot");
+            self.data = head.exe(req);
+            self.inner.pop_front();
             self.is_boot = true;
         }
         self.dequeue()
@@ -55,11 +57,18 @@ impl MwQueue {
         self.inner.push_back(item);
     }
     pub fn dequeue(&mut self) -> bool {
+        println!("dequeue: {:#?}", self.data);
+        println!("{}", self.inner.len());
         let data_cloned = self.data.clone();
         if self.is_boot {
             if let Some(cur_midware) = self.inner.pop_front() {
                 if let Some(__next_midware) = self.peek() {
                     self.data = cur_midware.exe(data_cloned);
+                    self.dequeue();
+                    return true;
+                } else {
+                    self.data = cur_midware.exe(data_cloned);
+                    println!("finish");
                     return true;
                 }
                 self.is_boot = false;

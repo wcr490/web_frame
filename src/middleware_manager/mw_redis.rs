@@ -11,6 +11,7 @@ enum FrameType {
 
 midware_generator!(Redis);
 midware_method_generator!(Redis, Priority::P2, |req: RequestType| {
+    println!("redis");
     /* It should have a thread pool int the later version */
     if let RequestType::POST(map) = req.clone() {
         task::block_in_place(|| {
@@ -20,8 +21,6 @@ midware_method_generator!(Redis, Priority::P2, |req: RequestType| {
                 .expect("rt dropped for some errors");
         });
     }
-
-    println!("redis");
     req
 });
 
@@ -46,7 +45,7 @@ async fn redis_connect(map: HashMap<String, String>) -> RedisResult<()> {
 }
 
 async fn type_ident(flag: String) -> Option<FrameType> {
-    if flag.is_empty() {
+    if !flag.is_empty() {
         match flag.as_ref() {
             "Info" => return Some(FrameType::StatelessInfo),
             "Auth" => return Some(FrameType::Auth),
@@ -62,6 +61,7 @@ async fn write_stateless_info(
     map: HashMap<String, String>,
 ) -> RedisResult<()> {
     for (k, v) in map {
+        println!("write: {} to {}", v, k);
         client.set(&k, v.into()).await?;
     }
     Ok(())
