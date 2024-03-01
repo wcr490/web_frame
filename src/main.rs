@@ -20,7 +20,6 @@ use frame::{
     hyper_manager::server::*,
     middleware_manager::{mw_get::*, mw_post::*, mw_queue::*, mw_redis::*},
     mw_queue_generator, mw_queue_map_generator,
-    preload::*,
     route_manager::route::*,
     Config,
 };
@@ -30,6 +29,7 @@ sql_pool_generator!();
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     /* Sql Testing  */
     let pool = set_db_pool("mysql://root:852200gH@localhost:3306/test").await;
+    db_pool();
     println!(
         "succeed connecting to DB and creating a thread pool:\n{:#?}",
         DB

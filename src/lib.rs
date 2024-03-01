@@ -1,6 +1,5 @@
 pub mod hyper_manager;
 pub mod middleware_manager;
-pub mod preload;
 pub mod route_manager;
 pub mod template_rendering_manager;
 
