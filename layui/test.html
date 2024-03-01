@@ -2,114 +2,102 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>基础菜单 - Layui</title>
+  <title>layout 管理界面大布局示例 - Layui</title>
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link href="//cdn.staticfile.org/layui/2.9.7/css/layui.css" rel="stylesheet">
 </head>
-<body class="layui-bg-gray">
-<div class="layui-panel" style="width: 260px; margin: 16px;">
-  <ul class="layui-menu" id="demo-menu">
-    <li lay-options="{id: 100}">
-      <div class="layui-menu-body-title"><a href="javascript:;">menu item 1</a></div>
-    </li>
-    <li lay-options="{id: 101}">
-      <div class="layui-menu-body-title">
-        <a href="javascript:;">menu item 2 <span class="layui-badge-dot"></span></a>
-      </div>
-    </li>
-    <li class="layui-menu-item-divider"></li>
-    <li class="layui-menu-item-group layui-menu-item-down" lay-options="{type: 'group'}">
-      <div class="layui-menu-body-title">
-        menu group <i class="layui-icon layui-icon-up"></i>
-      </div>
-      <ul>
-        <li lay-options="{id: 103}">
-          <div class="layui-menu-body-title">menu item 3-1</div>
+<body>
+<div class="layui-layout layui-layout-admin">
+  <div class="layui-header layui-bg-orange">
+    <div class="layui-logo layui-hide-xs layui-bg-red">layout demo</div>
+    <ul class="layui-nav layui-layout-right"></ul>
+  </div>
+  <div class="layui-side layui-bg-black">
+    <div class="layui-side-scroll">
+      <!-- 左侧导航区域（可配合layui已有的垂直导航） -->
+      <ul class="layui-nav layui-nav-tree" lay-filter="test">
+        <li class="layui-nav-item layui-nav-itemed">
+          <a class="" href="javascript:;">menu group 1</a>
+          <dl class="layui-nav-child">
+            <dd><a href="javascript:;">menu 1</a></dd>
+            <dd><a href="javascript:;">menu 2</a></dd>
+            <dd><a href="javascript:;">menu 3</a></dd>
+            <dd><a href="javascript:;">the links</a></dd>
+          </dl>
         </li>
-        <li class="layui-menu-item-group" lay-options="{type: 'group', isAllowSpread: false}">
-          <div class="layui-menu-body-title">menu group 2</div>
-          <ul>
-            <li class="layui-menu-item-checked">
-              <div class="layui-menu-body-title">menu item 3-2-1</div>
-            </li>
-            <li><div class="layui-menu-body-title">menu item 3-2-2</div></li>
-          </ul>
+        <li class="layui-nav-item">
+          <a href="javascript:;">menu group 2</a>
+          <dl class="layui-nav-child">
+            <dd><a href="javascript:;">list 1</a></dd>
+            <dd><a href="javascript:;">list 2</a></dd>
+            <dd><a href="javascript:;">超链接</a></dd>
+          </dl>
         </li>
-        <li><div class="layui-menu-body-title">menu item 3-3</div></li>
+        <li class="layui-nav-item"><a href="javascript:;">click menu item</a></li>
+        <li class="layui-nav-item"><a href="javascript:;">the links</a></li>
       </ul>
-    </li>
-    <li class="layui-menu-item-divider"></li>
-    <li><div class="layui-menu-body-title">menu item 4 <span class="layui-badge">1</span></div></li>
-    <li><div class="layui-menu-body-title">menu item 5</div></li>
-    <li><div class="layui-menu-body-title">menu item 6</div></li>
-    <li class="layui-menu-item-parent" lay-options="{type: 'parent'}">
-      <div class="layui-menu-body-title">
-        menu item 7 Children
-        <i class="layui-icon layui-icon-right"></i>
-      </div>
-      <div class="layui-panel layui-menu-body-panel">
+    </div>
+  </div>
+  <div class="layui-body">
+    <!-- 内容主体区域 -->
+    <div style="padding: 15px;">
+      <blockquote class="layui-elem-quote layui-text">
+        Layui 框体布局内容主体区域
+      </blockquote>
+      <div class="layui-card layui-panel">
+        <div class="layui-card-header">
+          下面是充数内容，为的是出现滚动条
+        </div>
+        <div class="layui-card-body">
         <ul>
-          <li class="layui-menu-item-parent" lay-options="{type: 'parent'}">
-            <div class="layui-menu-body-title">
-              menu item 7-1
-              <i class="layui-icon layui-icon-right"></i>
-            </div>
-            <div class="layui-panel layui-menu-body-panel">
-              <ul>
-                <li><div class="layui-menu-body-title">menu item 7-2-1</div></li>
-                <li><div class="layui-menu-body-title">menu item 7-2-2</div></li>
-                <li><div class="layui-menu-body-title">menu item 7-2-3</div></li>
-                <li><div class="layui-menu-body-title">menu item 7-2-4</div></li>
-              </ul>
-            </div>
-          </li>
-          <li><div class="layui-menu-body-title">menu item 7-2</div></li>
-          <li><div class="layui-menu-body-title">menu item 7-3</div></li>
+           <code markdown>
+            ## 在HTML中使用markdown
+            在这里面写就行。
+          </code>
         </ul>
+       </div>
       </div>
-    </li>
-    <li>menu item 8</li>
-    <li class="layui-menu-item-divider"></li>
-    <li class="layui-menu-item-group" lay-options="{type: 'group', isAllowSpread: false}">
-      <div class="layui-menu-body-title">menu group 9</div>
-      <ul>
-        <li><div class="layui-menu-body-title">menu item 9-1</div></li>
-        <li class="layui-menu-item-parent" lay-options="{type: 'parent'}">
-          <div class="layui-menu-body-title">
-            menu item 9-2
-            <i class="layui-icon layui-icon-right"></i>
-          </div>
-          <div class="layui-panel layui-menu-body-panel">
-            <ul>
-              <li><div class="layui-menu-body-title">menu item 9-2-1</div></li>
-              <li><div class="layui-menu-body-title">menu item 9-2-2</div></li>
-              <li><div class="layui-menu-body-title">menu item 9-2-3</div></li>
-            </ul>
-          </div>
-        </li>
-        <li><div class="layui-menu-body-title">menu item 9-31</div></li>
-      </ul>
-    </li>
-    <li class="layui-menu-item-divider"></li>
-    <li><div class="layui-menu-body-title">menu item 10</div></li>
-  </ul>
+      <br><br>
+    </div>
+  </div>
+  <div class="layui-footer">
+    <!-- 底部固定区域 -->
+    底部固定区域
+  </div>
 </div>
+ 
 <script src="//cdn.staticfile.org/layui/2.9.7/layui.js"></script>
 <script>
-layui.use(function(){
-  var dropdown = layui.dropdown;
+//JS 
+layui.use(['element', 'layer', 'util'], function(){
+  var element = layui.element;
   var layer = layui.layer;
   var util = layui.util;
-  // 菜单点击事件
-  dropdown.on('click(demo-menu)', function(options){
-    console.log(this, options);
-    
-    // 显示 - 仅用于演示
-    layer.msg(util.escape(JSON.stringify(options)));
+  var $ = layui.$;
+  
+  //头部事件
+  util.event('lay-header-event', {
+    menuLeft: function(othis){ // 左侧菜单事件
+      layer.msg('展开左侧菜单的操作', {icon: 0});
+    },
+    menuRight: function(){  // 右侧菜单事件
+      layer.open({
+        type: 1,
+        title: '更多',
+        content: '<div style="padding: 15px;">处理右侧面板的操作</div>',
+        area: ['260px', '100%'],
+        offset: 'rt', // 右上角
+        anim: 'slideLeft', // 从右侧抽屉滑出
+        shadeClose: true,
+        scrollbar: false
+      });
+    }
   });
 });
 </script>
+<script src="https://cdn.jsdelivr.net/npm/marked@3.0.0/marked.min.js"></script>
+
 </body>
 </html>

@@ -426,6 +426,7 @@ dependencies = [
  "hyper",
  "hyper-util",
  "mini-redis",
+ "once_cell",
  "serde_json",
  "sqlx",
  "tokio",

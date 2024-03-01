@@ -13,15 +13,15 @@ pub mod mw_get;
 pub mod mw_post;
 pub mod mw_queue;
 pub mod mw_redis;
+pub mod mw_sql;
 
 use super::hyper_manager::request_handler::*;
 use super::route_manager::route::*;
 use mw_get::*;
 use mw_queue::*;
-use std::hash::Hash;
-
 use std::collections::HashMap;
 use std::collections::VecDeque;
+use std::hash::Hash;
 
 #[macro_export]
 macro_rules! midware_generator {

@@ -1,6 +1,9 @@
+use frame::sql_pool_generator;
 use futures::lock::Mutex;
 use hyper::Method;
 use mini_redis::{client, Result as RedisResult};
+use once_cell::sync::OnceCell;
+
 use std::borrow::BorrowMut;
 use std::collections::HashMap;
 use std::net::SocketAddr;
@@ -17,12 +20,20 @@ use frame::{
     hyper_manager::server::*,
     middleware_manager::{mw_get::*, mw_post::*, mw_queue::*, mw_redis::*},
     mw_queue_generator, mw_queue_map_generator,
+    preload::*,
     route_manager::route::*,
     Config,
 };
 
+sql_pool_generator!();
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    /* Sql Testing  */
+    let pool = set_db_pool("mysql://root:852200gH@localhost:3306/test").await;
+    println!(
+        "succeed connecting to DB and creating a thread pool:\n{:#?}",
+        DB
+    );
     /* Redis Testing */
     // let mut client = client::connect("127.0.0.1:6379").await?;
     // client.set("hello world", "hey".into()).await?;

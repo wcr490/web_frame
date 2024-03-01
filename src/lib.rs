@@ -1,5 +1,6 @@
 pub mod hyper_manager;
 pub mod middleware_manager;
+pub mod preload;
 pub mod route_manager;
 pub mod template_rendering_manager;
 
@@ -7,10 +8,11 @@ use hyper::Method;
 use hyper_manager::server::*;
 use middleware_manager::mw_queue::*;
 use route_manager::route::*;
+use sqlx::mysql::MySqlPool;
+use sqlx::mysql::MySqlPoolOptions;
 use std::collections::HashMap;
 use template_rendering_manager::example_view::*;
 use template_rendering_manager::simple_view::*;
-
 /// essential struct
 /// used to correspond and relate different threads
 pub struct Config {
