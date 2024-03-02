@@ -2,6 +2,7 @@ pub mod hyper_manager;
 pub mod middleware_manager;
 pub mod route_manager;
 pub mod template_rendering_manager;
+use once_cell::sync::OnceCell;
 
 use hyper::Method;
 use hyper_manager::server::*;
@@ -12,6 +13,9 @@ use sqlx::mysql::MySqlPoolOptions;
 use std::collections::HashMap;
 use template_rendering_manager::example_view::*;
 use template_rendering_manager::simple_view::*;
+
+pub static DB: OnceCell<MySqlPool> = OnceCell::new();
+
 /// essential struct
 /// used to correspond and relate different threads
 pub struct Config {
