@@ -1,12 +1,16 @@
+use serde::{Deserialize, Serialize};
+use std::io::Write;
+
 use super::*;
-use crate::{midware_generator, midware_method_generator};
+use crate::{midware_generator, midware_method_generator, REDIS_AUTH_FILE, REDIS_NORMAL_FILE};
 use mini_redis::{client as RedisClient, Result as RedisResult};
 use tokio::task;
 
 enum FrameType {
     StatelessInfoWrite,
     StatelessInfoRead,
-    Auth,
+    AuthWrite,
+    AuthRead,
     Unknown,
 }
 
@@ -40,7 +44,8 @@ async fn redis_connect(map: HashMap<String, String>) -> RedisResult<()> {
         FrameType::Unknown => {}
         FrameType::StatelessInfoWrite => return write_stateless_info(&mut client, map).await,
         FrameType::StatelessInfoRead => return read_stateless_info(&mut client, map).await,
-        FrameType::Auth => {}
+        FrameType::AuthWrite => return write_auth(&mut client, map).await,
+        FrameType::AuthRead => {}
     }
     Ok(())
 }
@@ -50,7 +55,8 @@ async fn type_ident(flag: String) -> Option<FrameType> {
         match flag.as_ref() {
             "InfoWrite" => return Some(FrameType::StatelessInfoWrite),
             "InfoRead" => return Some(FrameType::StatelessInfoRead),
-            "Auth" => return Some(FrameType::Auth),
+            "AuthWrite" => return Some(FrameType::AuthWrite),
+            "AuthRead" => return Some(FrameType::AuthRead),
             _ => return Some(FrameType::Unknown),
         }
     } else {
@@ -67,7 +73,14 @@ async fn write_stateless_info(
             continue;
         }
         println!("redis: write {} to {}", v, k);
-        client.set(&k, v.into()).await?;
+        client.set(&k, v.clone().into()).await?;
+        unsafe {
+            REDIS_NORMAL_FILE
+                .get_mut()
+                .expect("fail to get redis snapshot file")
+                .write_all(format!("{}:{}\n", k, v).as_bytes())?;
+            println!("write");
+        }
     }
     Ok(())
 }
@@ -91,6 +104,40 @@ async fn read_stateless_info(
     }
     Ok(())
 }
+#[derive(Serialize, Deserialize)]
+pub struct Auth {
+    usr: String,
+    pwd: String,
+    check_stamp: String,
+}
+async fn write_auth(
+    client: &mut RedisClient::Client,
+    map: HashMap<String, String>,
+) -> RedisResult<()> {
+    let auth = map
+        .get("authorization")
+        .expect("fail to find the infomation of authorization");
+    let (usr, pwd) = split_dot(auth).await;
+    unsafe {
+        REDIS_AUTH_FILE
+            .get()
+            .expect("fail to access to redis authorization file")
+            .write_all(
+                serde_json::to_string(&Auth {
+                    usr,
+                    pwd,
+                    check_stamp: std::time::SystemTime::now()
+                        .duration_since(std::time::UNIX_EPOCH)
+                        .unwrap()
+                        .as_millis()
+                        .to_string(),
+                })
+                .expect("fail to convert info into json")
+                .as_bytes(),
+            )?;
+    }
+    Ok(())
+}
 async fn split_comma(str: String) -> Vec<String> {
     let mut tmp = str.clone();
     let mut vec: Vec<String> = Vec::new();
@@ -100,4 +147,8 @@ async fn split_comma(str: String) -> Vec<String> {
     }
     vec.push(tmp);
     vec
+}
+async fn split_dot(str: &String) -> (String, String) {
+    let (usr, pwd) = str.split_at(str.find(".").expect("authorization has a wrong format"));
+    (usr.to_string(), pwd.to_string())
 }

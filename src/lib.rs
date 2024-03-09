@@ -14,7 +14,9 @@ use std::collections::HashMap;
 use template_rendering_manager::example_view::*;
 use template_rendering_manager::simple_view::*;
 
-pub static DB: OnceCell<MySqlPool> = OnceCell::new();
+// pub static DB: OnceCell<MySqlPool> = OnceCell::new();
+pub static mut REDIS_NORMAL_FILE: OnceCell<std::fs::File> = OnceCell::new();
+pub static mut REDIS_AUTH_FILE: OnceCell<std::fs::File> = OnceCell::new();
 
 /// essential struct
 /// used to correspond and relate different threads
